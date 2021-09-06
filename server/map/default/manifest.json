@@ -1,0 +1,9 @@
+{
+	"_t": 165848498,
+	"name":"Default",
+	"type":"overworld",
+	"size": [3, 1],
+	"chunkmap": [
+		[3, 1, 2]
+	]
+}

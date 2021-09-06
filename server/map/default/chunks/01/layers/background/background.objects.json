@@ -1,0 +1,26 @@
+[
+	{
+		"id": "qwdqwdrqw",
+		"name": "OBJECT_FIREPLACE",
+		"type": "OBJECT_TYPE_CONSUME",
+		"coords": [16,16]
+	},
+	{
+		"id": "qwdqwdqwd",
+		"name": "fireplace",
+		"type": "OBJECT_TYPE_CONSUME",
+		"coords": [7,7]
+	},
+	{
+		"id": "qrfewferw",
+		"name": "OBJECT_FIREPLACE",
+		"type": "OBJECT_TYPE_CONSUME",
+		"coords": [2,25]
+	},
+	{
+		"id": "cwedqwd",
+		"name": "OBJECT_FIREPLACE",
+		"type": "OBJECT_TYPE_CONSUME",
+		"coords": [2,2]
+	}
+]

@@ -1,0 +1,31 @@
+{
+	"_t": 6556465165,
+	"_id": "5a4d7a9f3b8a8f8b5e23b2e",
+	"name": "02",
+	"data": {
+		"size": "CHUNK_DEFAULTSIZE",
+		"type": "CHUNK_DEFAULTTYPE",
+		"region": "REGION_DANGEROUS",
+		"position": [-1,0],
+		"rotation": 0,
+		"scale": 0,
+		"visible": true,
+		"map": {
+			"layers": [
+				{
+					"name": "background",
+					"layerFile": "background.layer",
+					"loadObject": true
+				},
+				{
+					"name": "middle",
+					"layerFile": "middleground.layer"
+				},
+				{
+					"name": "foreground",
+					"layerFile": "foreground.layer"
+				}
+			]
+		}
+	}
+}
