@@ -6,8 +6,8 @@ import {
   WebSocket,
 } from "https://deno.land/std@0.106.0/ws/mod.ts";
 
-import Vector from './Vector.ts'
-import { Player } from './Player.ts'
+import Vector from './Engine/Maths/Vector.ts'
+import { Player } from './Engine/Objects/Player.ts'
 const gravity = 0.98;
 const Engine = {} as any;
 Engine.lastTime = 0;
@@ -27,8 +27,10 @@ const events = new Map<string, any>();
 Engine.players = players;
 Engine.socks = wsConnections;
 Engine.events = events;
-function initplayer(socketid: string, clientid: string, message: any) {
+
+const initplayer = async (socketid: string, clientid: string, message: any) => {
 	console.log(`New Player => ID : ${clientid}| Name : ${message.data.name}`)
+	const socket = Engine.socks.get(socketid)
 	const pos = new Vector(0,0)
 	let sprite = "";
 	if (message.data.name === "bob") {
@@ -40,33 +42,40 @@ function initplayer(socketid: string, clientid: string, message: any) {
 		pos.y = 132;
 		sprite = "player_girl"
 	} else {
-		console.error('wtf')
-	}
-	const player = new Player(socketid,clientid, {
-		position: pos,
-		name: message.data.name,
-		sprite: sprite
-	})
-	const socket = Engine.socks.get(socketid)
-	socket.send(JSON.stringify({
-		type: "init",
-		data: {
-			id: clientid,
-			data: player,
-			players: Array.from(Engine.players.values()),
+		if (!socket.isClosed) {
+			return await socket.close(1000, `Invalid character selected`).catch(console.error);
 		}
-	}))
-	Engine.players.set(socketid, player)
-	//Queue the new player spawn event
+		//close the socket 
+		// socket.close(`No player selected`)
 
-	Engine.events.set(`${Math.round(performance.now())}::spawn`, function (this: any) : void {
-		this.type = 'spawn';
-		Engine.sendToAll(socket, {
-			type: 'newplayer',
-			config: this,
-			data: {player:player}
+	}
+	if (sprite !== "") {
+		const player = new Player(socketid,clientid, {
+			position: pos,
+			name: message.data.name,
+			sprite: sprite
 		})
-	})
+		socket.send(JSON.stringify({
+			type: "init",
+			data: {
+				id: clientid,
+				data: player,
+				players: Array.from(Engine.players.values()),
+			}
+		}))
+		Engine.players.set(socketid, player)
+		//Queue the new player spawn event
+	
+		Engine.events.set(`${Math.round(performance.now())}::spawn`, function (this: any) : void {
+			this.type = 'spawn';
+			Engine.sendToAll(socket, {
+				type: 'newplayer',
+				config: this,
+				data: {player:player}
+			})
+		})
+	}
+	return false
 }
 
 Engine.broadcast = function (data: any) {
@@ -95,7 +104,7 @@ async function handleWs(sock: WebSocket, Engine: any) {
 				if (message.id && message.type && message.data) {
 					if (message.type === 'init' && !Engine.socks.has(sockid)) {
 						Engine.socks.set(sockid, sock);
-						initplayer(sockid, message.data.wsid, message);
+						await initplayer(sockid, message.data.wsid, message);
 					} else {
 						switch (message.type) {
 							case 'player.move':
@@ -210,10 +219,4 @@ Engine.start = async (port: number) => {
 	}
 }
 
-
-if (import.meta.main) {
-	const port = Deno.args[0] || "8080";
-	console.info(`[DEBUG] Server running`);
-	await Engine.start(port);
-
-}
+export default Engine;

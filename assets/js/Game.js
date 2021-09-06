@@ -101,9 +101,24 @@ Game._frame = function(objects) {
 	Engine.CTX[2].restore()
 }
 
+Game.stop = function(reason) {
+	Engine.CTX[0].clearRect(0, 0, Engine.CTX[0].canvas.width, Engine.CTX[0].canvas.height);
+	Engine.CTX[1].clearRect(0, 0, Engine.CTX[1].canvas.width, Engine.CTX[1].canvas.height);
+	Engine.CTX[2].clearRect(0, 0, Engine.CTX[2].canvas.width, Engine.CTX[2].canvas.height);
+	if (reason) {
+		Engine.CTX[0].fillStyle = '#FFF';
+		Engine.CTX[0].font = '20px Arial';
+		Engine.CTX[0].fillText(`Error : ${reason}`, Engine.CTX[0].canvas.width / 2 - Engine.CTX[0].measureText(`Error : ${reason}`).width / 2, Engine.CTX[0].canvas.height / 2);
+		window.cancelAnimationFrame(Game.animationframe);
+		//refresh the page after 3 seconds
+		setTimeout(() => {
+			window.location.reload();
+		}, 3000);
+	}
+}
 
 Game.loop = function() {
-	window.requestAnimationFrame(() => {
+	Game.animationframe = window.requestAnimationFrame(() => {
 		Game.loop(Engine);
 	})
 	

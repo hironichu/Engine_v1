@@ -21,10 +21,6 @@ const Engine = {
 		"d": "right",
 		"s": "down",
 		" ": "dash",
-		"+": "addmass",
-		"-": "lowermass",
-		"0": "addspeed",
-		"9": "lowerspeed",
 	},
 	CTX: [],
 	Game: null,
@@ -80,16 +76,25 @@ const Engine = {
 		Engine.assets.set('walls', await (await import('./entities/Walls.entity.js')).Props)
 		Engine.Game = await (await import('./Game.js')).Game;
 		await console.info(`Asset loaded [${Math.round(performance.now() - time)}ms]`)
-		Engine.playername = prompt("What is your name?");
+		Engine.serverName = prompt("Server URL : ");
+		if (!Engine.serverName || Engine.serverName === "") {
+			//Prompt an error and stop the game
+			// alert("No server name provided, stopping the game");
+			await Engine.Game.stop("No server name provided, stopping the game");
+			return;
+		}
+		Engine.playername = prompt("Select a character : bob | alice");
 		if (!Engine.playername) Engine.playername = "bob";
 		// alert("Welcome to the game, " + Engine.playername + "!");
-		Engine.ws = new WebSocket((window.location.hostname === '127.0.0.1' ? 'ws://localhost:8080': 'wss://9fe4-2a01-cb14-7a0-300-b52e-6b51-c671-cedd.eu.ngrok.io'), 'game');
+		Engine.ws = new WebSocket((window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost'  ? 'ws://localhost:8080': Engine.serverName), 'game');
 		var id = new Uint32Array(32);
 		window.crypto.getRandomValues(id);
 		Engine.ws.id = ([1e7] + -1e3 + -4e3 + -8e3 + -1e11).replace(/[018]/g, c =>(c ^ (crypto.getRandomValues(new Uint8Array(1))[0] & (15 >> (c / 4)))).toString(16));
-		Engine.ws.onerror = (e) => {
-			console.error(e);
-			alert("Connection error, please try again later.");
+		Engine.ws.onerror = async (e) => {
+			// await Engine.Game.stop(`Connection error, please try again later.`);
+			// console.error(e);
+			// alert("Connection error, please try again later.");
+			await Engine.Game.stop(e.reason || `The Server or the client found a nasty bug`);
 		}
 		Engine.ws.onopen = async () => {
 			await Engine.ws.send(JSON.stringify({
@@ -105,8 +110,18 @@ const Engine = {
 				}
 			}));
 		}
-		Engine.ws.onclose = (data) => {
+		Engine.ws.onclose = async (data) => {
 			console.log(`Connection closed [${data.code}] ${data.reason}`, data);
+			switch(data.type) {
+				case 'close':
+					await Engine.Game.stop(data.reason || `The Server closed the connection`);
+					break;
+				case 'error':
+					await Engine.Game.stop(data.reason || `Error while joining the server`);
+					break;
+			}
+			//Stop the game
+			// await Engine.Game.stop(data.reason);
 		}
 		Engine.ws.onmessage = async (event) => {
 			const message = JSON.parse(event.data);

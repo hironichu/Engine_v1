@@ -1,4 +1,4 @@
-import Vector from "./Vector.ts";
+import Vector from "../Maths/Vector.ts";
 export class Player {
 	id: string;
 	playerdata: any
