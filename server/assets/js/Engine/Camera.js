@@ -22,20 +22,26 @@ export default function Camera(xView, yView, viewportWidth, viewportHeight, worl
 		this.xDeadZone = xDeadZone;
 		this.yDeadZone = yDeadZone;
 	}
+	this.setViewport = function(xView, yView, wView, hView) {
+		this.xView = xView;
+		this.yView = yView;
+		this.wView = wView;
+		this.hView = hView;
+	}
 	this.update = function() {
 
 		if (this.followed != null) {
 			if (this.axis == AXIS.HORIZONTAL || this.axis === AXIS.BOTH) {
-				if (this.followed.position.x - this.xView + this.xDeadZone > this.wView)
-					this.xView = this.followed.position.x - (this.wView - this.xDeadZone);
-				else if (this.followed.position.x - this.xDeadZone < this.xView)
-					this.xView = this.followed.position.x - this.xDeadZone;
+				if ((this.followed.position.x - (this.followed.width / 2)) - this.xView + this.xDeadZone > this.wView)
+					this.xView =(this.followed.position.x + (this.followed.width / 2)) - (this.wView - this.xDeadZone);
+				else if ((this.followed.position.x - (this.followed.width / 2)) - this.xDeadZone < this.xView)
+					this.xView = (this.followed.position.x + (this.followed.width / 2)) - this.xDeadZone;
 			}
 			if (this.axis == AXIS.VERTICAL || this.axis === AXIS.BOTH) {
-				if (this.followed.position.y - this.yView + this.yDeadZone > this.hView)
-					this.yView = this.followed.position.y - (this.hView - this.yDeadZone);
-				else if (this.followed.position.y - this.yDeadZone < this.yView)
-					this.yView = this.followed.position.y - this.yDeadZone;
+				if ((this.followed.position.y- this.followed.height / 2) - this.yView + this.yDeadZone > this.hView)
+					this.yView = (this.followed.position.y - (this.followed.height / 2)) - (this.hView - this.yDeadZone);
+				else if ((this.followed.position.y- this.followed.height / 2) - this.yDeadZone < this.yView)
+					this.yView = (this.followed.position.y + (this.followed.height / 2)) - this.yDeadZone;
 			}
 		}
 		this.viewportRect.set(this.xView, this.yView);

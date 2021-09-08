@@ -19,16 +19,11 @@ export const Game = {
 }
 
 Game.update = function(objects) {
-	// Promise.all([...objects].map(([index, object]) => object.update()))
 	if (Game.self.movements.inputs.size > 0) {
 		Game.self.walking = true;
-		//Send a movement request to the server with all the inputs pressed
-		// const posX = (Game.self.x - this.width / 2) - Engine.Game.camera.xView
-		// const posY = (Game.self.y - this.height / 2) - Engine.Game.camera.yView
 		Engine.ws.send(JSON.stringify({
 			type: 'player.move',
 			id: Game.self.uuid,
-			// player: Game.self.uuid,
 			data: {
 					updatetype: 'position',
 					inputs: Array.from(Game.self.movements.inputs.values()),
@@ -38,14 +33,14 @@ Game.update = function(objects) {
 					mapheight: Game.currentmap.height,
 					position: Game.self.position,
 					posinmap: Game.self.posinmap,
+					screenwidth: Engine.CTX[2].canvas.width,
+					screenheight: Engine.CTX[2].canvas.height,
 				}
 			})
 		);
 	} else {
 		Game.self.walking = false;
 	}
-	// Promise.all([...objects].map(([index, object]) => object.move()))
-	Game.camera.update();
 }
 
 Game._frame = function(objects) {
@@ -58,6 +53,9 @@ Game._frame = function(objects) {
 	Engine.CTX[2].clearRect(0, 0, Engine.CTX[2].canvas.width, Engine.CTX[2].canvas.height);
 
 	Game.currentmap.draw();
+	Engine.CTX[1].fillStyle = '#fff';
+	Engine.CTX[1].font = '15px Arial';
+	Engine.CTX[1].fillText(`FPS: ${Math.round(1 / Game.deltaTime)}`, 20, Engine.CTX[0].canvas.height - 20);
 
 	if (Engine.Game.DrawnObjects.size > objects.length) {
 		Engine.Game.DrawnObjects.clear();
@@ -77,25 +75,21 @@ Game._frame = function(objects) {
 	}
 	//Draw the Engine.ws.id to the screen in the top middle
 	Engine.CTX[1].fillStyle = '#fff';
-	Engine.CTX[1].font = '20px Arial';
+	Engine.CTX[1].font = '15px Arial';
 	const text = `ID: ${Engine.ws.id}`;
 	Engine.CTX[1].fillText(text, Engine.CTX[0].canvas.width / 2 - Engine.CTX[0].measureText(text).width , 20);
 	//Draw the numbers of players to the screen in the top right
 	Engine.CTX[1].fillStyle = '#fff';
-	Engine.CTX[1].font = '20px Arial';
+	//Align the text to the right
+	Engine.CTX[1].textAlign = 'end';
 	const text2 = `Players: ${Game.Players.size}`;
-	Engine.CTX[1].fillText(text2, Engine.CTX[0].canvas.width - (Engine.CTX[0].measureText(text2).width * 2) - 50, 20);
+	Engine.CTX[1].fillText(text2, Engine.CTX[0].canvas.width + Engine.CTX[0].measureText(text2).width - 60 , 20);
 	//Draw the number of drawn object in the top right corner
 	Engine.CTX[1].fillStyle = '#fff';
-	Engine.CTX[1].font = '20px Arial';
-	const text4 = `Objects: ${Engine.Game.DrawnObjects.size}`;
-	Engine.CTX[1].fillText(text4, Engine.CTX[0].canvas.width - (Engine.CTX[0].measureText(text4).width * 2) - 50, 40);
+	Engine.CTX[1].textAlign = 'end';
+	const text4 = `Drawn Objects: ${Engine.Game.DrawnObjects.size}`;
+	Engine.CTX[1].fillText(text4, Engine.CTX[0].canvas.width + (Engine.CTX[0].measureText(text4).width - 90), 40);
 
-	//Draw the FPS to the screen in the bottom left
-	Engine.CTX[1].fillStyle = '#fff';
-	Engine.CTX[1].font = '20px Arial';
-	const text3 = `FPS: ${Math.round(1 / Game.deltaTime)}`;
-	Engine.CTX[1].fillText(text3, 20, Engine.CTX[0].canvas.height - 20);
 	Engine.CTX[0].restore()
 	Engine.CTX[1].restore()
 	Engine.CTX[2].restore()
@@ -126,10 +120,9 @@ Game.loop = function() {
 	Game.delta = Game.now - Game.then;
 	Game.deltaTime = Game.delta / 1000;
 	if(Game.delta > Engine.settings.INTERVAL) {
-		const objects = [...Game.Players, ...Game.Props, ...Game.Walls, ...Game.Houses, ...Game.Entities];
-		Game.update(objects)
-		Game.camera.update();
-		Game._frame(objects);
+		const Objects = [...Game.Players, ...Game.Props, ...Game.Walls, ...Game.Houses, ...Game.Entities];
+		Game.update(Objects)
+		Game._frame(Objects);
 		Game.gameFrames++;
 		Game.then = Game.now - (Game.delta % Engine.settings.INTERVAL);
 	}
@@ -137,9 +130,9 @@ Game.loop = function() {
 
 Game.newOnlinePlayer = function(player) {
 	const now = performance.now();
-	console.log(`New player ${player.id} connected at ${now}`);
+	console.log(`New player ${player.id}|${player.name} connected [${Math.round(now)}ms]`);
 	Game.Players.set(player.id, new Engine.Player({
-		id: `${Game.now}::${player.sid}::${player.name}`,
+		id: `${Date.now()}::${player.sid}::${player.name}`,
 		uuid: player.id,
 		self: (Engine.ws.id === player.id),
 		wsid: player.sid,
@@ -164,9 +157,9 @@ Game.start = async function(LocalPlayer,PlayersObject, Engine) {
 	console.log(`Game loading [Engine V${Engine.version}] in map ${LocalPlayer.map}`)
 	const MapGen = await (await import('./Generation/Map.js')).MapGen
 	const defaultmap = await new MapGen()
-	Engine.vWidth = Math.min(defaultmap.width, Engine.CTX[1].canvas.width);
-	Engine.vHeight = Math.min(defaultmap.height, Engine.CTX[1].canvas.height);
-	Game.camera = new Engine.Camera(0, 0,  Engine.vWidth, Engine.vHeight, defaultmap.width, defaultmap.height);
+	Engine.vWidth = Math.min(defaultmap.width, Engine.CTX[1].canvas.width );
+	Engine.vHeight = Math.min(defaultmap.height, Engine.CTX[1].canvas.height );
+	Game.camera = new Engine.Camera(LocalPlayer.position.x, LocalPlayer.position.y,  Engine.vWidth, Engine.vHeight, defaultmap.width, defaultmap.height);
 	Game.gameFrames = 0;
 	Game.Maps.set('default', new Engine.Map(defaultmap))
 	Game.now = performance.now();
@@ -177,7 +170,7 @@ Game.start = async function(LocalPlayer,PlayersObject, Engine) {
 		PlayersObject.forEach(player => Game.newOnlinePlayer(player))
 	}
 	Game.Players.set(LocalPlayer.id, new Engine.Player({
-		id: `${Game.now}::${LocalPlayer.sid}::${LocalPlayer.name}`,
+		id: `${Date.now()}::${LocalPlayer.sid}::${LocalPlayer.name}`,
 		uuid: LocalPlayer.id,
 		wsid: LocalPlayer.sid,
 		self: true,
@@ -195,14 +188,20 @@ Game.start = async function(LocalPlayer,PlayersObject, Engine) {
 		maxhealth: LocalPlayer.maxhealth,
 	}))
 	Game.self = Game.Players.get(LocalPlayer.id)
-	Game.camera.follow(Game.self, Engine.vWidth / 2, Engine.vHeight / 2);
+	Game.camera.follow(Game.self, (Engine.vWidth / 2), Engine.vHeight / 2);
+	self.posinmap = new Engine.Vector((Game.self.position.x - Game.self.width / 2) - Game.camera.xView, (Game.self.position.y - Game.self.height / 2) - Game.camera.yView);
 	document.addEventListener('keydown', (event) => {
 		var KeyPressed = event.key
 		event.preventDefault();
+		//Make sure we don't repeat the same key
 		if (typeof Engine.keybinds[KeyPressed] !== 'undefined') {
 			const key = Engine.keybinds[KeyPressed]
+			//Check if we just pressed the key
 			if (!Game.self.movements.inputs.has(key)) {
 				Game.self.movements.inputs.add(key)
+			} else {
+				//We already pressed the key
+				return;
 			}
 		}
 	}, {passive: false, capture: true})
@@ -214,6 +213,8 @@ Game.start = async function(LocalPlayer,PlayersObject, Engine) {
 			const key = Engine.keybinds[KeyPressed]
 			if (Game.self.movements.inputs.has(key)) {
 				Game.self.movements.inputs.delete(key)
+			} else {
+				return ;
 			}
 		} else {
 		}
@@ -227,6 +228,25 @@ Game.start = async function(LocalPlayer,PlayersObject, Engine) {
 	window.addEventListener('blur', (event) => {
 		// console.log(event)
 		Game.self.movements.inputs.clear()
+	})
+	window.addEventListener('resize', (event) => {
+		if (Game.self && Game.camera) {
+			Engine.vWidth = Math.min(Game.currentmap.width, window.innerWidth);
+			Engine.vHeight = Math.min(Game.currentmap.height, window.innerHeight);
+			Game.camera.setViewport(Game.self.position.x, Game.self.position.y, Engine.vWidth, Engine.vHeight);
+			Game.camera.follow(Game.self, (Engine.vWidth / 2), Engine.vHeight / 2);
+			//resize all the canvas
+			Engine.CTX[0].canvas.width = window.innerWidth;
+			Engine.CTX[0].canvas.height = window.innerHeight;
+			Engine.CTX[1].canvas.width = window.innerWidth;
+			Engine.CTX[1].canvas.height = window.innerHeight;
+			Engine.CTX[2].canvas.width = window.innerWidth;
+			Engine.CTX[2].canvas.height = window.innerHeight;
+			//Regenerate the map
+			// const defaultmap = await new MapGen()
+			// Game.Maps.set('default', new Engine.Map(defaultmap))
+			// Game.currentmap = Game.Maps.get('default')
+		}
 	})
 	Game.loop()
 }

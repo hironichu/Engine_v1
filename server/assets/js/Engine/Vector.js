@@ -16,6 +16,26 @@ export default function Vector(x,y) {
 		this.y -= vector.y;
 		return this
 	}
+	this.lerp = (vector, amount) => {
+		this.x += (vector.x - this.x) * amount;
+		this.y += (vector.y - this.y) * amount;
+		return this
+	}
+	this.lerpunclamped = (vector, amount) => {
+		this.x += (vector.x - this.x) * amount;
+		this.y += (vector.y - this.y) * amount;
+		this.x = Math.min(Math.max(this.x, -1), 1);
+		this.y = Math.min(Math.max(this.y, -1), 1);
+		return this
+	}
+	this.distance = (vector) => {
+		return Math.sqrt(Math.pow(vector.x - this.x, 2) + Math.pow(vector.y - this.y, 2))
+	}
+	this.clamp = (min, max) => {
+		this.x = Math.min(Math.max(this.x, min.x), max.x);
+		this.y = Math.min(Math.max(this.y, min.y), max.y);
+		return this
+	}
 	this.scaler = (scaler) => {
 		this.x *= scaler;
 		this.y *= scaler;

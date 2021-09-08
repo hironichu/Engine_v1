@@ -4,7 +4,7 @@ export default function Map(mapdata){
 	this.height = mapdata.height;
 	this.data = mapdata
 	this.draw = () => {
-		var sx, sy, dx, dy;
+		let sx, sy, dx, dy;
 		var sWidth, sHeight, dWidth, dHeight;
 		sx = Engine.Game.camera.xView;
 		sy = Engine.Game.camera.yView;
@@ -12,7 +12,7 @@ export default function Map(mapdata){
 		sHeight = Engine.CTX[1].canvas.height;
 
 		if (this.data.width - sx < sWidth) {
-			sWidth = this.image.width - sx;
+			sWidth = this.data.width - sx;
 		}
 		if (this.data.height - sy < sHeight) {
 			sHeight = this.data.height - sy;

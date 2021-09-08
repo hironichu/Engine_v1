@@ -1,0 +1,140 @@
+//Remove the scrolling bar from body and html element
+// @import "Game";
+@import "Test";
+
+ :root {
+	--pixel-size: 2px;
+	--grid-cell: calc( var(--pixel-size) * 16);
+	--bg: #121212;
+	overflow: hidden;
+}
+
+body,html {
+	overflow: hidden;
+	display: flex;
+	position: fixed;
+	margin: 0;
+	padding: 0;
+	width: 100%;
+	height: 100%;
+	// zoom: 1.2;
+	flex-wrap: nowrap;
+	flex-direction: column;
+	justify-content: center;
+	align-content: center;
+	align-items: center;
+	background-color: var(--bg);
+}
+#gameCanvas {
+	position: fixed;
+	width: 100%;
+	height: 100%;
+
+}
+.canvas{
+	position: fixed;
+	margin: 0;
+	top: 0;
+	left: 0;
+	// zoom: 2;
+	&.canvas-backdrop {
+		position: absolute;
+		left: 0;
+		top: 0;
+		width: 100%;
+		height: 100%;
+		background: transparent;
+		z-index: 20;
+	}
+	&.canvas-ground {
+		position: absolute;
+		left: 0;
+		top: 0;
+		width: 100%;
+		height: 100%;
+		background: transparent;
+		z-index: 30;
+	}
+	&.canvas-interactive {
+		position: absolute;
+		left: 0;
+		top: 0;
+		width: 100%;
+		height: 100%;
+		background: transparent;
+		z-index: 50;
+		// box-shadow: inset 0 0 100px black;
+		user-select: none;
+		&.flash-health {
+			animation: flashhealth .7s infinite;
+		}
+	}
+}
+.gui {
+	position: fixed;
+	width: 100%;
+	height: 100%;
+	z-index: 100;
+	background: transparent;
+	display: flex;
+	>.status {
+		display: flex;
+		top: 10px;
+		position: fixed;
+		left: 10px;
+		background: #00000052;
+		width: 450px;
+		height: 100px;
+	    border-radius: 3px;
+   		backdrop-filter: blur(1px);
+	}
+	>.inv {
+		display: -webkit-box;
+		display: -ms-flexbox;
+		right: 10px;
+		display: flex;
+		position: relative;
+		top: -50px;
+		margin: auto 0 auto auto;
+		height: 510px;
+		width: 48px;
+		background: #00000052;
+		border-radius: 3px;
+		backdrop-filter: blur(1px);
+	}
+	.combat {
+		display: flex;
+		position: absolute;
+		margin: auto 0 0 0;
+		height: 165px;
+		width: 280px;
+		bottom: 40px;
+		background: #2507043b;
+		left: 15px;
+		border-radius: 3px;
+		backdrop-filter: blur(1px);
+	}
+}
+
+@keyframes flashhealth {
+	0% {
+		box-shadow: inset 0 0 100px rgb(92, 11, 0);
+	}
+	25% {
+		box-shadow: inset 0 0 50px rgb(116, 14, 0);
+	}
+	// 65% {
+	// 	box-shadow: inset 0 0 100px rgb(70, 11, 3);
+	// }
+	100% {
+		box-shadow: inset 0 0 100px rgb(92, 11, 0);
+	}
+  }
+.resimg {
+	image-rendering: pixelated;
+	-webkit-image-rendering: pixelated;
+	-moz-image-rendering: pixelated;
+	-ms-image-rendering: pixelated;
+	-o-image-rendering: pixelated;
+
+}

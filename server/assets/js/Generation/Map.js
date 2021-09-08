@@ -172,13 +172,13 @@ export class MapGen {
 		})
 		this.chunks = Promise.all(chunks)
 		const mapdata = this.chunks.then((chunks) => {
-			const width = (3 * 1024) * 1.5//chunks.reduce((acu, chunk) => acu + (chunk.data.x * 1024) , 0)
-			const height = (2 * 1024)  * 1.5 //chunks.reduce((acu, chunk) => acu + (chunk.data.y * 1024) , 0)
+			const width = (3 * 1024) * 1.7//chunks.reduce((acu, chunk) => acu + (chunk.data.x * 1024) , 0)
+			const height = (2 * 1024)  * 1.7 //chunks.reduce((acu, chunk) => acu + (chunk.data.y * 1024) , 0)
 			const map = document.createElement('canvas')
 			map.width = width
 			map.height = height
 			const context = map.getContext('2d')
-			context.scale(1.5, 1.5)
+			context.scale(1.7, 1.7)
 			for (const chunk of chunks) {
 				context.drawImage(chunk.image, 0, 0, 1024, 1024, (chunk.data.x * 1024), chunk.data.y * 1024, 1024, 1024);
 			}

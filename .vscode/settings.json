@@ -1,5 +1,12 @@
 {
 	"deno.enable": true,
 	"deno.lint": true,
-	"deno.unstable": true
+	"deno.unstable": true,
+	"liveSassCompile.settings.formats": [
+		{
+			"format": "compressed",
+			"extensionName": ".min.css",
+			"savePath": "/server/assets/css"
+		}
+	]
 }

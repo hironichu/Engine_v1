@@ -1,0 +1,14 @@
+@use "sass:math";
+
+@mixin checkHp($hp) {
+	@if ($hp <= 0) {
+		box-shadow: inset 0 0 100px red;
+	} @else if ($hp < 20) {
+		box-shadow: inset 0 0 100px yellow;
+	} @else if ($hp < 50) {
+		box-shadow: inset 0 0 100px green;
+	} @else {
+		box-shadow: inset 0 0 100px black;
+	}
+
+}

@@ -1,4 +1,4 @@
-const fps = 60;
+const fps = 75;
 const interval = 1000 / fps;
 const Engine = {
 	version: '1.0.0',
@@ -37,24 +37,25 @@ const Engine = {
 		DOMCanvasElem.insertAdjacentElement('afterbegin', gameGroundCanvas);
 		DOMCanvasElem.insertAdjacentElement('afterbegin', gameInteractiveCanvas);
 
-		gameBackdropCanvas.width = DOMCanvasElem.clientWidth;
-		gameBackdropCanvas.height = DOMCanvasElem.clientHeight;
-		gameGroundCanvas.width = DOMCanvasElem.clientWidth;
-		gameGroundCanvas.height = DOMCanvasElem.clientHeight;
-		gameInteractiveCanvas.width = DOMCanvasElem.clientWidth;
-		gameInteractiveCanvas.height = DOMCanvasElem.clientHeight;
+		gameBackdropCanvas.width = window.innerWidth;
+		gameBackdropCanvas.height = window.innerHeight
+		gameGroundCanvas.width = window.innerWidth;
+		gameGroundCanvas.height = window.innerHeight
+		gameInteractiveCanvas.width = window.innerWidth;
+		gameInteractiveCanvas.height = window.innerHeight
 		window.addEventListener('resize', (event) => {
-			gameBackdropCanvas.width = DOMCanvasElem.clientWidth;
-			gameBackdropCanvas.height = DOMCanvasElem.clientHeight;
-			gameGroundCanvas.width = DOMCanvasElem.clientWidth;
-			gameGroundCanvas.height = DOMCanvasElem.clientHeight;
-			gameInteractiveCanvas.width = DOMCanvasElem.clientWidth;
-			gameInteractiveCanvas.height = DOMCanvasElem.clientHeight;
+			gameBackdropCanvas.width = window.innerWidth;
+			gameBackdropCanvas.height = window.innerHeight
+			gameGroundCanvas.width = window.innerWidth;
+			gameGroundCanvas.height = window.innerHeight
+			gameInteractiveCanvas.width = window.innerWidth;
+			gameInteractiveCanvas.height = window.innerHeight
 		})
 		Engine.CTX[0] = gameBackdropCanvas.getContext('2d');
 		Engine.CTX[1] = gameGroundCanvas.getContext('2d');
 		Engine.CTX[2] = gameInteractiveCanvas.getContext('2d');
-		Engine.Cursor = new Engine.Vector(DOMCanvasElem.clientWidth / 2, DOMCanvasElem.clientHeight / 2);
+
+		Engine.Cursor = new Engine.Vector( window.innerWidth / 2, window.innerHeight / 2);
 		Engine.CursorinMap = new Engine.Vector(0,0);
 		Engine.gravity = 0.98;
 		gameInteractiveCanvas.onmousemove = function(e) {
@@ -76,24 +77,20 @@ const Engine = {
 		Engine.assets.set('walls', await (await import('./entities/Walls.entity.js')).Props)
 		Engine.Game = await (await import('./Game.js')).Game;
 		await console.info(`Asset loaded [${Math.round(performance.now() - time)}ms]`)
-		Engine.serverName = prompt("Server URL : ");
-		if (!Engine.serverName || Engine.serverName === "") {
-			//Prompt an error and stop the game
-			// alert("No server name provided, stopping the game");
-			await Engine.Game.stop("No server name provided, stopping the game");
-			return;
+		if (!(window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost')) {
+			Engine.serverName = prompt("Server URL : ");
+			if (!Engine.serverName || Engine.serverName === "") {
+				await Engine.Game.stop("No server name provided, stopping the game");
+				return;
+			}
 		}
-		Engine.playername = prompt("Select a character : bob | alice");
+		Engine.playername = prompt("Choose a Username ");
 		if (!Engine.playername) Engine.playername = "bob";
-		// alert("Welcome to the game, " + Engine.playername + "!");
 		Engine.ws = new WebSocket((window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost'  ? 'ws://localhost:8080': Engine.serverName), 'game');
 		var id = new Uint32Array(32);
 		window.crypto.getRandomValues(id);
-		Engine.ws.id = ([1e7] + -1e3 + -4e3 + -8e3 + -1e11).replace(/[018]/g, c =>(c ^ (crypto.getRandomValues(new Uint8Array(1))[0] & (15 >> (c / 4)))).toString(16));
+		Engine.ws.id = crypto.randomUUID();
 		Engine.ws.onerror = async (e) => {
-			// await Engine.Game.stop(`Connection error, please try again later.`);
-			// console.error(e);
-			// alert("Connection error, please try again later.");
 			await Engine.Game.stop(e.reason || `The Server or the client found a nasty bug`);
 		}
 		Engine.ws.onopen = async () => {
@@ -104,8 +101,8 @@ const Engine = {
 					wsid: Engine.ws.id,
 					name: Engine.playername,
 					version: Engine.version,
-					width: Engine.CTX[0].canvas.clientWidth,
-					height: Engine.CTX[0].canvas.clientHeight,
+					screenWidth: Engine.CTX[2].canvas.clientWidth,
+					screenHeight: Engine.CTX[2].canvas.clientHeight,
 					fps: fps
 				}
 			}));
@@ -127,36 +124,29 @@ const Engine = {
 			const message = JSON.parse(event.data);
 			switch (message.type) {
 				case 'init':
-					console.log('INIT', message.data);
+					// console.log('INIT', message.data);
+					console.info(`Game started [${Math.round(performance.now() - window.loadedtime)}ms]`);
 					await Engine.Game.start(message.data.data, message.data.players, Engine);
-					console.log(`Game started [${Math.round(performance.now() - window.loadedtime)}ms]`);
 					break;
 				case'newplayer':
-					console.log(`NEW PLAYER `, message)
-					await Engine.Game.newOnlinePlayer(message.data.player);
-					console.log(`Player online [${Math.round(performance.now() - window.loadedtime)}ms] Name : ${message.data.player.name}`);
+					console.info(`Player online [${Math.round(performance.now() - window.loadedtime)}ms] Name : ${message.data.player.name}`);
+					Engine.Game.newOnlinePlayer(message.data.player);
 					break;
 				case 'update':
 					//Check updatetype
 					switch (message.data.updatetype) {
 						case 'player.move':
-							const update = message.data.data
-							console.info(update)
-							const player = Engine.Game.Players.get(update.id).update(update);
-							// console.log(update.id)
-							// player.update(update);
+							if (Engine.Game.Players.has(message.data.id)) {
+								Engine.Game.Players.get(message.data.id).update(message.data.data);
+							}
+						break;
+						default: 
+							//
 						break;
 					}
-					// const objects = [...Game.Players, ...Game.Props, ...Game.Walls, ...Game.Houses, ...Game.Entities];
-					//Check what to update within the
-					// const player = Engine.Game.Players.get(data.data.uuid);
-					// if (player) {
-					// 	player.update(data.data);
-					// }
 					break;
 				case 'player.disconnect':
-					// console.log(message)
-					console.log(`Player offline [${Math.round(performance.now() - window.loadedtime)}ms]`);
+					console.info(`Player offline [${Math.round(performance.now() - window.loadedtime)}ms]`);
 					Engine.Game.Players.delete(message.data.clientid);
 					break;
 				case 'error':
