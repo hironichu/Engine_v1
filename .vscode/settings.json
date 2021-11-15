@@ -2,6 +2,7 @@
 	"deno.enable": true,
 	"deno.lint": true,
 	"deno.unstable": true,
+	"deno.unstable.allowExperimental": true,
 	"liveSassCompile.settings.formats": [
 		{
 			"format": "compressed",

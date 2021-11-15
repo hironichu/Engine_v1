@@ -1,0 +1,14 @@
+{
+	"version": 0,
+	"name":"world",
+	"type": "MAP_OVERWORLD",
+	"file":"data.fbm",
+	"chunks": {
+		"chunk_size": 32,
+		"chunk_map": [[1,2,3],[4,5,6],[7,8,9]]
+	},
+	"regions": {},
+	"tilesets" : [
+		"default"
+	]
+}

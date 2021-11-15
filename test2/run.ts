@@ -29,6 +29,7 @@ const Pool = {
 		worker.onerror = Pool.onError;
 		worker.onmessageerror = Pool.onMessageError;
 		Pools.set(name, worker);
+		return worker;
 	},
 	delete: (name: string) => {
 		if (Pools.has(name)) {
@@ -60,11 +61,8 @@ const Pool = {
 	}
 }
 
-await Pool.create('test');
+const NewWorker = await Pool.create('test');
 //set a timeout of 5 seconds and execute pool.delete test
-setTimeout(() => {
-	Pool.delete('test');
-}, 5000);
 
 // // const Pools = new Map<string, Pool>();
 

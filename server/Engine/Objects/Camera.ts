@@ -21,8 +21,8 @@ export default class Camera {
 	public followed: Player | null;
 	public viewportRect: Rectangle;
 	public worldRect: Rectangle;
-
-	constructor (xView: number, yView:number , viewportWidth:number, viewportHeight:number, worldWidth:number, worldHeight:number ) {
+	public map: string;
+	constructor (xView: number, yView:number , viewportWidth:number, viewportHeight:number, worldWidth:number, worldHeight:number, map: string) {
 		this.xView = xView || 0;
 		this.yView = yView || 0;
 		this.xDeadZone = 0;
@@ -33,6 +33,7 @@ export default class Camera {
 		this.worldHeight = worldHeight;
 		this.axis = AXIS.BOTH;
 		this.followed = null;
+		this.map = map;
 		this.viewportRect = new Rectangle(this.xView, this.yView, this.wView, this.hView);
 		this.worldRect = new Rectangle(0, 0, worldWidth, worldHeight);
 	}

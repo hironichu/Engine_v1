@@ -88,8 +88,10 @@ const Engine = {
 		if (!Engine.playername) Engine.playername = "bob";
 		Engine.ws = new WebSocket((window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost'  ? 'ws://localhost:8080': Engine.serverName), 'game');
 		var id = new Uint32Array(32);
-		window.crypto.getRandomValues(id);
-		Engine.ws.id = crypto.randomUUID();
+		const rand = window.crypto.getRandomValues(id);
+		const UUIDurl = URL.createObjectURL(new Blob(rand))
+		const UUID = UUIDurl.substring(UUIDurl.lastIndexOf('/') + 1)
+		Engine.ws.id = UUID;
 		Engine.ws.onerror = async (e) => {
 			await Engine.Game.stop(e.reason || `The Server or the client found a nasty bug`);
 		}
@@ -123,20 +125,23 @@ const Engine = {
 		Engine.ws.onmessage = async (event) => {
 			const message = JSON.parse(event.data);
 			switch (message.type) {
-				case 'init':
+				case 'player.init':
 					// console.log('INIT', message.data);
 					console.info(`Game started [${Math.round(performance.now() - window.loadedtime)}ms]`);
-					await Engine.Game.start(message.data.data, message.data.players, Engine);
+					await Engine.Game.start(message.data.data, message.data.visiblePlayers, Engine);
 					break;
-				case'newplayer':
+				case'player.new':
+					//
 					console.info(`Player online [${Math.round(performance.now() - window.loadedtime)}ms] Name : ${message.data.player.name}`);
 					Engine.Game.newOnlinePlayer(message.data.player);
 					break;
-				case 'update':
+				case 'player.update':
+					// alert(`Player update`);
 					//Check updatetype
 					switch (message.data.updatetype) {
 						case 'player.move':
 							if (Engine.Game.Players.has(message.data.id)) {
+								// alert(`Player move`);
 								Engine.Game.Players.get(message.data.id).update(message.data.data);
 							}
 						break;
@@ -145,15 +150,18 @@ const Engine = {
 						break;
 					}
 					break;
+				case 'player.meet': 
+				
+					break;
 				case 'player.disconnect':
 					console.info(`Player offline [${Math.round(performance.now() - window.loadedtime)}ms]`);
 					Engine.Game.Players.delete(message.data.clientid);
 					break;
 				case 'error':
-					console.error(data.data);
+					console.error(message);
 					break;
 				default:
-					console.error('Unknown message type: ' + data.type);
+					console.error(message);
 				break;
 			}
 		}

@@ -1,7 +1,7 @@
 import { listenAndServe, serve, ServerRequest } from "https://deno.land/std@0.106.0/http/server.ts";
 import { serveFile } from 'https://deno.land/std@0.106.0/http/file_server.ts'
-import { existsSync } from "https://deno.land/std@0.106.0/fs/mod.ts"
-import  "https://deno.land/x/cliffy@v0.19.5/mod.ts"
+import { existsSync } from "https://deno.land/std@0.108.0/fs/mod.ts"
+import  "https://deno.land/x/cliffy@v0.19.6/mod.ts"
 
 // export { listenAndServe, serve, ServerRequest } from "https://deno.land/std/http/server.ts"
 import {
@@ -33,7 +33,7 @@ const Cameras = new Map<string, Camera>();
 Engine.players = players;
 Engine.socks = wsConnections;
 Engine.events = events;
-Engine.Cameras = Cameras
+Engine.Cameras = Cameras as Map<string, Camera>;
 Engine.Maps = {
 	"default": {
 		width: 4608,
@@ -53,6 +53,8 @@ Engine.randomY = function (map: string) {
 
 
 
+let testx = Engine.randomX('default')
+let testy = Engine.randomY('default')
 const initplayer = (socketid: string, clientid: string, message: any) => {
 	console.log(`New Player => ID : ${clientid}| Name : ${message.data.name}`)
 	const socket = Engine.socks.get(socketid)
@@ -67,11 +69,11 @@ const initplayer = (socketid: string, clientid: string, message: any) => {
 		pos.y = Engine.randomY('default');
 		sprite = "player_girl"
 	} else {
-		
-		pos.x = Engine.randomX('default')
-		pos.y = Engine.randomY('default');
+		pos.x = testx;
+		pos.y = testy;
+		testx += 64;
+		// testy += 32;
 		sprite = "player_default";
-
 	}
 	if (sprite !== "") {
 		const player = new Player(socketid,clientid, {
@@ -82,24 +84,32 @@ const initplayer = (socketid: string, clientid: string, message: any) => {
 			screenWidth: message.data.screenWidth,
 			screenHeight: message.data.screenHeight,
 		}, Engine)
-		Engine.Cameras.set(socketid, new Camera(player.position.x, player.position.y, Math.min(Engine.Maps[player.map].width, player.screenWidth), Math.min(Engine.Maps[player.map].height, player.screenHeight), Engine.Maps[player.map].width, Engine.Maps[player.map].height));
+		Engine.Cameras.set(socketid, new Camera(player.position.x, player.position.y, Math.min(Engine.Maps[player.map].width, player.screenWidth), Math.min(Engine.Maps[player.map].height, player.screenHeight), Engine.Maps[player.map].width, Engine.Maps[player.map].height, player.map));
 		Engine.Cameras.get(socketid).follow(player, Math.min(Engine.Maps[player.map].width, player.screenWidth) / 2, Math.min(Engine.Maps[player.map].height, player.screenHeight) / 2);
+		const playerCam = Engine.Cameras.get(socketid);
+		
+		const visiblePlayers = [...Engine.Cameras].filter(([sid, cam]) => cam.map === player.map && sid !== socketid && cam.xView > playerCam.xView - ((player.screenWidth / 2) + 256) && cam.xView < playerCam.xView + ((player.screenWidth / 2) + 256) && cam.yView > playerCam.yView - ((player.screenHeight / 2) + 256) && cam.yView < playerCam.yView + ((player.screenHeight / 2) + 256)).map(([sid, cam]) => cam.followed);
+		player.visiblePlayers = visiblePlayers;
+		
 		socket.send(JSON.stringify({
-			type: "init",
+			type: "player.init",
 			data: {
 				id: clientid,
 				data: player,
-				players: Array.from(Engine.players.values()),
+				visiblePlayers: visiblePlayers,
+
 			}
 		}))
-		Engine.players.set(socketid, player)
+		Engine.players.set(socketid, player);
 
-		Engine.events.set(`${Math.round(Date.now())}::spawn`, function (this: any) : void {
-			this.type = 'spawn';
+		Engine.events.set(`${Math.round(Date.now())}::player.online`, function (this: any) : void {
+			this.type = 'player.online';
 			Engine.sendToAll(socket, {
-				type: 'newplayer',
+				type: 'player.new',
 				config: this,
-				data: {player:player}
+				data: {
+					player:player
+				}
 			})
 		})
 	}

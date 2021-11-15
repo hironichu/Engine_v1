@@ -3,7 +3,6 @@ import Vector from "../Maths/Vector.ts";
 import Camera from "./Camera.ts";
 export class Player {
 	id: string;
-	playerdata: any
 	velocity: Vector
 	position: Vector
 	direction: string
@@ -22,6 +21,7 @@ export class Player {
 	posinmap: Vector;
 	screenWidth: number;
 	screenHeight: number;
+	visiblePlayers: Array<Player> = []
 	constructor(sid: string, clientid: string, playerdata: any, Engine: any) {
 		this.id = clientid;
 		this.sid = sid;
@@ -40,7 +40,7 @@ export class Player {
 		this.posinmap = new Vector(0, 0);
 		this.screenWidth = playerdata.screenWidth;
 		this.screenHeight = playerdata.screenHeight;
-
+		this.visiblePlayers = [];
 		this.movements = {
 			angle: 0,
 			direction: 0,
@@ -55,7 +55,10 @@ export class Player {
 		//Check the kind of update and update the player accordingly
 		const update = data.data
 		if (update.updatetype == 'position') {
-			const inputs = new Set(update.inputs);
+			//Convert the update.inputs object to a Map
+			// console.log((update.inputs))
+			const inputs = new Map((update.inputs));
+			// const inputs = new Map(update.inputs);
 			this.movements.inputs = inputs;
 			this.movements.weight = (this.mass * 0.98)
 			// console.log(this.velocity)
@@ -76,30 +79,32 @@ export class Player {
 				this.velocity.y += (this.speed * Engine.Game.deltaTime) / this.movements.weight
 			}
 			this.movements.delta = Engine.Game.deltaTime
-			this.checkPlayerCollision(Engine)
-			const playerCam = Engine.Cameras.get(this.sid)
-			Promise.all([...Engine.players].filter(([sid, client]) => client.map === this.map).map(([SocketId, client]) => {
-				const Camera = Engine.Cameras.get(SocketId);
+			// this.checkPlayerCollision(Engine)
+			const playerCam = Engine.Cameras.get(this.sid);
+			const newVisible = [...Engine.Cameras].filter(([sid, cam]) => cam.map === this.map && cam.xView > playerCam.xView - ((this.screenWidth / 2) + 256) && cam.xView < playerCam.xView + ((this.screenWidth / 2) + 256) && cam.yView > playerCam.yView - ((this.screenHeight / 2) + 256) && cam.yView < playerCam.yView + ((this.screenHeight / 2) + 256)).map(([sid, cam]) => cam.followed.sid)
+			//Compare the new visible players with the old visible players and send the new ones to the client
+			const newVisiblePlayers = newVisible.filter((player) => !this.visiblePlayers.includes(player.sid))
+			const oldVisiblePlayers = this.visiblePlayers.filter((player) => !newVisible.includes(player.sid))
+			this.visiblePlayers = newVisiblePlayers
+			// newVisiblePlayers.push(this.sid)
+			newVisiblePlayers.forEach((playersid) => {
+				// console.log(playersid)
+				const sock = Engine.socks.get(playersid)
+				sock.send(JSON.stringify({
+					type: 'player.update',
+					data: {
+						id: this.id,
+						updatetype: 'player.move',
+						data: this
+					}
+				}));
 
-				if (Camera.xView > playerCam.xView - ((this.screenWidth / 2) + 256) && Camera.xView < playerCam.xView + ((this.screenWidth / 2) + 256) && Camera.yView > playerCam.yView - ((this.screenHeight / 2) + 256) && Camera.yView < playerCam.yView + ((this.screenHeight / 2) + 256)) {
-						const sock = Engine.socks.get(client.sid)
-						sock.send(JSON.stringify({
-							type: 'update',
-							config: this,
-							data: {
-								id: this.id,
-								updatetype: 'player.move',
-								data: this
-							}
-						}));
-				}
-
-			}))
+			})
+			// })
 		}
 	}
 	move (Engine: any) {
-		this.CheckColideMaps(Engine)
-
+		// this.CheckColideMaps(Engine)
 		this.velocity.scaler(0.92);
 		this.position.add(this.velocity);
 		this.posinmap.add(this.velocity);
@@ -109,7 +114,6 @@ export class Player {
 		[...Engine.players].forEach(([sid, player]) => {
 			if (player != this) {
 				if (this.collision(player)) {
-					//if they are colliding, move them away from each other
 					this.position.add(this.velocity.scaler(-1));
 					this.velocity.scaler(0);
 					
@@ -127,21 +131,21 @@ export class Player {
 		return false
 	}
 	private CheckColideMaps(Engine: any) {
-		if (this.position.x - 32 < 0) {
-			this.position.x = 32;
-			this.velocity.x = 0;
-		}
-		if (this.position.y - 32  < 0) {
-			this.position.y = 32;
-			this.velocity.y = 0;
-		}
-		if (this.position.x + 32 > Engine.Maps[this.map].width) {
-			this.position.x = Engine.Maps[this.map].width - 32;
-			this.velocity.x = 0;
-		}
-		if (this.position.y + 32 > Engine.Maps[this.map].height) {
-			this.position.y =  Engine.Maps[this.map].height - 32;
-			this.velocity.y = 0;
-		}
+		// if (this.position.x - 32 < 0) {
+		// 	this.position.x = 32;
+		// 	this.velocity.x = 0;
+		// }
+		// if (this.position.y - 32  < 0) {
+		// 	this.position.y = 32;
+		// 	this.velocity.y = 0;
+		// }
+		// if (this.position.x + 32 > Engine.Maps[this.map].width) {
+		// 	this.position.x = Engine.Maps[this.map].width - 32;
+		// 	this.velocity.x = 0;
+		// }
+		// if (this.position.y + 32 > Engine.Maps[this.map].height) {
+		// 	this.position.y =  Engine.Maps[this.map].height - 32;
+		// 	this.velocity.y = 0;
+		// }
 	}
 }

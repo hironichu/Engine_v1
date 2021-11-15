@@ -30,31 +30,17 @@ export default function Player(playerdata) {
 		direction: 0,
 		distance: 0,
 		weight: 0,
-		inputs: new Set(),
+		inputs: new Map(),
+		history: new Map(),
 		sight: new Map()
 	}
 	this.update = function(netdata) {
+		console.log(netdata)
 		if (netdata.health === 0) return ;
 		this.name = netdata.name;
 		this.direction = netdata.direction;
 		this.walking = netdata.walking;
 
-		if (this.position.x - this.width / 2 < 0) {
-			this.position.x = this.width / 2;
-			this.velocity.x = 0;
-		}
-		if (this.position.y - this.height / 2 < 0) {
-			this.position.y = this.height / 2;
-			this.velocity.y = 0;
-		}
-		if (this.position.x + this.width / 2 > Engine.Game.currentmap.width) {
-			this.position.x = Engine.Game.currentmap.width - this.width / 2;
-			this.velocity.x = 0;
-		}
-		if (this.position.y + this.height / 2 > Engine.Game.currentmap.height) {
-			this.position.y =  Engine.Game.currentmap.height - this.height / 2;
-			this.velocity.y = 0;
-		}
 		//Interpolate position and velocity to smooth movement with the server based on the netdata.movements.detla and the position and velocity sent 
 		// console.log((netdata.position.x - this.position.x) * netdata.movements.delta)
 			
@@ -70,11 +56,29 @@ export default function Player(playerdata) {
 		this.position.y += (netdata.position.y - this.position.y) * netdata.movements.delta;
 		this.velocity.x += (netdata.velocity.x - this.velocity.x) * netdata.movements.delta;
 		this.velocity.y += (netdata.velocity.y - this.velocity.y) * netdata.movements.delta;
-		this.checkPlayerCollision()
+		// this.checkPlayerCollision()
 		//Update the health of the player
 		this.health = netdata.health;
 		this.maxHealth = netdata.maxhealth;
 		//Update the position of the player in the map
+		if (this.self) {
+			if (this.position.x - this.width / 2 < 0) {
+				this.position.x = this.width / 2;
+				this.velocity.x = 0;
+			}
+			if (this.position.y - this.height / 2 < 0) {
+				this.position.y = this.height / 2;
+				this.velocity.y = 0;
+			}
+			if (this.position.x + this.width / 2 > Engine.Game.currentmap.width) {
+				this.position.x = Engine.Game.currentmap.width - this.width / 2;
+				this.velocity.x = 0;
+			}
+			if (this.position.y + this.height / 2 > Engine.Game.currentmap.height) {
+				this.position.y =  Engine.Game.currentmap.height - this.height / 2;
+				this.velocity.y = 0;
+			}
+		}
 		this.posinmap.x = (this.position.x - this.width / 2) - Engine.Game.camera.xView;
 		this.posinmap.y = (this.position.y - this.height / 2) - Engine.Game.camera.yView;
 
@@ -82,7 +86,7 @@ export default function Player(playerdata) {
 
 	this.move = function() {
 		this.behind()
-		this.checkMapCollision()
+		// this.checkMapCollision()
 		this.velocity.scaler(0.92)
 		//Check if the player is coliding with another player
 		this.position.add(this.velocity);
@@ -109,44 +113,38 @@ export default function Player(playerdata) {
 		return false
 	}
 	this.checkMapCollision = function() {
-		if (this.position.x - this.width / 2 < 0) {
-			this.position.x = this.width / 2;
-			this.velocity.x = 0;
-		}
-		if (this.position.y - this.height / 2 < 0) {
-			this.position.y = this.height / 2;
-			this.velocity.y = 0;
-		}
-		if (this.position.x + this.width / 2 > Engine.Game.currentmap.width) {
-			this.position.x = Engine.Game.currentmap.width - this.width / 2;
-			this.velocity.x = 0;
-		}
-		if (this.position.y + this.height / 2 > Engine.Game.currentmap.height) {
-			this.position.y =  Engine.Game.currentmap.height - this.height / 2;
-			this.velocity.y = 0;
-		}
+		// if (this.position.x - this.width / 2 < 0) {
+		// 	this.position.x = this.width / 2;
+		// 	this.velocity.x = 0;
+		// }
+		// if (this.position.y - this.height / 2 < 0) {
+		// 	this.position.y = this.height / 2;
+		// 	this.velocity.y = 0;
+		// }
+		// if (this.position.x + this.width / 2 > Engine.Game.currentmap.width) {
+		// 	this.position.x = Engine.Game.currentmap.width - this.width / 2;
+		// 	this.velocity.x = 0;
+		// }
+		// if (this.position.y + this.height / 2 > Engine.Game.currentmap.height) {
+		// 	this.position.y =  Engine.Game.currentmap.height - this.height / 2;
+		// 	this.velocity.y = 0;
+		// }
 	}
 	this.behind = function() {
 		//Check if a player is behind the player
-		[...Engine.Game.Players].forEach(([sid, player]) => {
-			if (player != this) {
-				if (this.posinmap.y <= player.posinmap.y - (player.height / 2) + 10 && this.posinmap.x < player.posinmap.x + (player.width / 2) && this.posinmap.x + (this.width / 2) > player.posinmap.x) {
-					if (player.layer < 3) {
-						player.changeLayer(3);
-					}
-				} 
-				if (this.posinmap.y >= player.posinmap.y - (player.height / 2) - 10 && this.posinmap.x < player.posinmap.x + (player.width / 2) && this.posinmap.x + (this.width / 2) > player.posinmap.x) {
-					//This player is behind the other player change the layer accordingly
-					if (player.layer > 1) {
-						player.changeLayer(1);
-					}
-				}
-			}
-		})
+		// [...Engine.Game.Players].forEach(([sid, player]) => {
+		// 	if (player != this) {
+		// 		if (player.position.y - 64 < this.position.y - 64) {
+
+		// 		} else {
+
+		// 		}
+		// 	}
+		// })
 
 	}
 	this.changeLayer = function(layer) {
-		this.layer = layer;
+		this.layer = layer
 	}
 	this.colided = function(ColisionOrigin,x,y, step) {
 	}
