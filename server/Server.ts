@@ -1,7 +1,6 @@
-import { serve, ConnInfo} from "https://deno.land/std@0.116.0/http/server.ts";
-import { serveFile } from 'https://deno.land/std@0.116.0/http/file_server.ts'
-import { existsSync } from "https://deno.land/std@0.116.0/fs/mod.ts"
-import  "https://deno.land/x/cliffy@v0.20.1/mod.ts"
+import { serve, ConnInfo} from "https://deno.land/std@0.114.0/http/server.ts";
+// import { serveFile } from 'https://deno.land/std@0.116.0/http/file_server.ts'
+// import  "https://deno.land/x/cliffy@v0.20.1/mod.ts"
 
 import Vector from './Engine/Maths/Vector.ts'
 import { Player } from './Engine/Objects/Player.ts'
@@ -236,8 +235,8 @@ Engine.loop = () => {
 	Game.deltaTime = Game.delta / 1000;
 	if(Game.delta > Game.interval) {
 		
-		const text = `TickRate: ${Math.round(1 / Game.deltaTime)} || Players: ${Engine.players.size}  `;
-		Deno.stdout.writeSync(new TextEncoder().encode(`\r${text}`));
+		// const text = `TickRate: ${Math.round(1 / Game.deltaTime)} || Players: ${Engine.players.size}  `;
+		// Deno.stdout.writeSync(new TextEncoder().encode(`\r${text}`));
 		//Listen for Stdin
 		Game.update();
 		Game.then = Game.now - (Game.delta % Game.interval);
@@ -259,23 +258,52 @@ Engine.start = async (port: number) => {
 			return response
 		} else {
 			if (accessURL.pathname === '/') {
-					const file = await serveFile(req, './index.html');
-					file.headers!.set('Content-Type', file.headers!.get('Content-Type') +'; charset=UTF-8')
+					const file = `<!DOCTYPE html>
+					<html lang="en">
+						<head>
+							<meta charset="UTF-8">
+							<meta http-equiv="X-UA-Compatible" content="IE=edge">
+							<meta name="viewport" content="width=device-width, initial-scale=1.0">
+							<title>ChunkNorris Engine 1.0</title>
+							<link rel="stylesheet" href="assets/css/style.min.css">
+						</head>
+						<body>
+							<div class="gui">
+								<div class="status"></div>
+								<div class="inv"></div>
+								<div class="combat"></div>
+							</div>
+							<div class="frame resimg" id='gameCanvas'></div>
+							<script type="module" src="assets/js/App.js"></script>
+						</body>
+					</html>`
+					const headers = new Headers();
+					headers!.set('Content-Type', 'text/html; charset=UTF-8')
+					new Response(file, { headers , status: 200})
 					// file.headers!.set('Cache-Control', 'private, max-age=31536000')
-					return file
+					// return file
 			} else {
 				const filepath =  accessURL.pathname
 				const requestpath = `./server/${filepath}`
-				if (existsSync(requestpath)) {
-					const content = await serveFile(req, requestpath)
-					content.headers!.set('Content-Type', content.headers!.get('Content-Type') +'; charset=UTF-8')
-					// content.headers!.set('Cache-Control', 'private, max-age=31536000')
-					return content
-				} else {
+				try {
+					const file = await Deno.readTextFile(requestpath)
+					// const headers = new Headers();
+					// headers!.set('Content-Type', 'text/html; charset=UTF-8')
+					return new Response(file, { status: 200})
+				} catch (e) {
 					return new Response("Error 404", { status: 404 })
 				}
+				// if (existsSync(requestpath)) {
+				// 	const content = await serveFile(req, requestpath)
+				// 	content.headers!.set('Content-Type', content.headers!.get('Content-Type') +'; charset=UTF-8')
+				// 	// content.headers!.set('Cache-Control', 'private, max-age=31536000')
+				// 	return content
+				// } else {
+				// 	return new Response("Error 404", { status: 404 })
+				// }
 			}
 		}
+		return new Response("Error", { status: 404 })
 		}, {addr:'0.0.0.0:8080'}).catch(console.error)
 }
 export default Engine;
