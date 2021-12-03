@@ -106,7 +106,7 @@ Game.stop = function(reason) {
 		window.cancelAnimationFrame(Game.animationframe);
 		//refresh the page after 3 seconds
 		setTimeout(() => {
-			window.location.reload();
+			// window.location.reload();
 		}, 3000);
 	}
 }

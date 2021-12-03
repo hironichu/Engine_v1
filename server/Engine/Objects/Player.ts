@@ -27,7 +27,7 @@ export class Player {
 		this.sid = sid;
 		this.name = playerdata.name;
 		this.position = new Vector(playerdata.position.x, playerdata.position.y);
-		this.speed = 180;
+		this.speed = 150;
 		this.velocity = new Vector(0, 0);
 		this.sprite = playerdata.sprite;
 		this.health = 100;
@@ -35,7 +35,7 @@ export class Player {
 		this.energy = 100;
 		this.maxenergy = 100;
 		this.level = 5;
-		this.mass = 6;
+		this.mass = 2;
 		this.map =	'default';
 		this.posinmap = new Vector(0, 0);
 		this.screenWidth = playerdata.screenWidth;
@@ -61,10 +61,11 @@ export class Player {
 			// const inputs = new Map(update.inputs);
 			this.movements.inputs = inputs;
 			this.movements.weight = (this.mass * 0.98)
+			this.movements.delta = Engine.Game.deltaTime
 			// console.log(this.velocity)
 			if (this.movements.inputs.has("left")) {
 				this.direction = 'left'
-				this.velocity.x -= (this.speed  * Engine.Game.deltaTime) / this.movements.weight
+				this.velocity.x -= (this.speed * Engine.Game.deltaTime) / this.movements.weight
 			}
 			if (this.movements.inputs.has("right")) {
 				this.direction = 'right'
@@ -78,7 +79,6 @@ export class Player {
 				this.direction = 'down'
 				this.velocity.y += (this.speed * Engine.Game.deltaTime) / this.movements.weight
 			}
-			this.movements.delta = Engine.Game.deltaTime
 			// this.checkPlayerCollision(Engine)
 			const playerCam = Engine.Cameras.get(this.sid);
 			const newVisible = [...Engine.Cameras].filter(([sid, cam]) => cam.map === this.map && cam.xView > playerCam.xView - ((this.screenWidth / 2) + 256) && cam.xView < playerCam.xView + ((this.screenWidth / 2) + 256) && cam.yView > playerCam.yView - ((this.screenHeight / 2) + 256) && cam.yView < playerCam.yView + ((this.screenHeight / 2) + 256)).map(([sid, cam]) => cam.followed.sid)
@@ -105,7 +105,7 @@ export class Player {
 	}
 	move (Engine: any) {
 		// this.CheckColideMaps(Engine)
-		this.velocity.scaler(0.92);
+		this.velocity.scaler(0.80);
 		this.position.add(this.velocity);
 		this.posinmap.add(this.velocity);
 		Engine.Cameras.get(this.sid).update()

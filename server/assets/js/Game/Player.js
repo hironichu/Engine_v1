@@ -11,8 +11,8 @@ export default function Player(playerdata) {
 	this.height = this.sprite.size[1];
 	this.position = new Engine.Vector(playerdata.position.x, playerdata.position.y);
 	this.velocity = new Engine.Vector(playerdata.velocity.x, playerdata.velocity.y);
-	this.speed = playerdata.speed || 100;
-	this.mass = playerdata.mass || 1;
+	this.speed = playerdata.speed || 0;
+	this.mass = playerdata.mass;
 	this.direction = playerdata.direction;
 	this.health = playerdata.health;
 	this.maxHealth = playerdata.maxhealth;
@@ -40,7 +40,7 @@ export default function Player(playerdata) {
 		this.name = netdata.name;
 		this.direction = netdata.direction;
 		this.walking = netdata.walking;
-
+		this.movements.weight = (this.mass * 0.98)
 		//Interpolate position and velocity to smooth movement with the server based on the netdata.movements.detla and the position and velocity sent 
 		// console.log((netdata.position.x - this.position.x) * netdata.movements.delta)
 			
@@ -87,7 +87,7 @@ export default function Player(playerdata) {
 	this.move = function() {
 		this.behind()
 		// this.checkMapCollision()
-		this.velocity.scaler(0.92)
+		this.velocity.scaler(0.80)
 		//Check if the player is coliding with another player
 		this.position.add(this.velocity);
 		this.posinmap.add(this.velocity);

@@ -1,15 +1,7 @@
-import { listenAndServe, serve, ServerRequest } from "https://deno.land/std@0.106.0/http/server.ts";
-import { serveFile } from 'https://deno.land/std@0.106.0/http/file_server.ts'
-import { existsSync } from "https://deno.land/std@0.108.0/fs/mod.ts"
-import  "https://deno.land/x/cliffy@v0.19.6/mod.ts"
-
-// export { listenAndServe, serve, ServerRequest } from "https://deno.land/std/http/server.ts"
-import {
-  acceptWebSocket,
-  isWebSocketCloseEvent,
-  isWebSocketPingEvent,
-  WebSocket,
-} from "https://deno.land/std@0.106.0/ws/mod.ts";
+import { serve, ConnInfo} from "https://deno.land/std@0.116.0/http/server.ts";
+import { serveFile } from 'https://deno.land/std@0.116.0/http/file_server.ts'
+import { existsSync } from "https://deno.land/std@0.116.0/fs/mod.ts"
+import  "https://deno.land/x/cliffy@v0.20.1/mod.ts"
 
 import Vector from './Engine/Maths/Vector.ts'
 import { Player } from './Engine/Objects/Player.ts'
@@ -132,13 +124,14 @@ Engine.sendToAll = function (sender: WebSocket, data: any) {
 }
 
 
-async function handleWs(sock: WebSocket, Engine: any) {
-	const sockid = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+function handleWs(sock: WebSocket, Engine: any) {
+	const sockid = crypto.randomUUID()
 	console.log(`New Socket ID: ${sockid}`)
-	try {
-		for await (const ev of sock) {
-			if (typeof ev === "string") {
-				const message = JSON.parse(ev);
+	sock.onopen = () => console.log("socket opened");
+	sock.onmessage = async (event: MessageEvent<any>) => {
+		if (typeof event.data === "string") {
+			try {
+				const message = JSON.parse(event.data);
 				if (message.id && message.type && message.data) {
 					if (message.type === 'init' && !Engine.socks.has(sockid)) {
 						Engine.socks.set(sockid, sock);
@@ -159,33 +152,40 @@ async function handleWs(sock: WebSocket, Engine: any) {
 							break;
 						}
 					}
-				} else {
-					console.log(`Invalid Message: `, message)
-					console.error('Invalid message')
 				}
-			} else if (isWebSocketCloseEvent(ev)) {
-				const { code, reason } = ev;
-				if (Engine.players.has(sockid)){
-					const clientid = Engine.players.get(sockid)!.id;
-					Engine.players.delete(sockid);
-					Engine.socks.delete(sockid);
-					Engine.Cameras.delete(sockid);
-					Engine.broadcast({
-						type: 'player.disconnect',
-						data: {
-							id: sockid,
-							clientid: clientid,
-							players: Array.from(Engine.players.values()),
-						}
-					})
-				}
-				if (!sock.isClosed) {
-					await sock.close(1000).catch(console.error);
-				}
+			} catch (e) {
+				console.error('invalid message type')
+				sock.close(1002, 'invalid message type')
 			}
+		// await dispatch(ws, decode(sid, event.data)).catch(console.error)
+		} else {
+			console.log('\nInvalid message')
+			sock.close(1002, 'invalid message type')
 		}
-	} catch (err) {
-		console.error(`\nFailed to receive frame: ${err}`);
+	}
+	sock.onclose = (event: CloseEvent) => {
+		const { code, reason } = event;
+		if (Engine.players.has(sockid)){
+			const clientid = Engine.players.get(sockid)!.id;
+			Engine.players.delete(sockid);
+			Engine.socks.delete(sockid);
+			Engine.Cameras.delete(sockid);
+			Engine.broadcast({
+				type: 'player.disconnect',
+				data: {
+					id: sockid,
+					clientid: clientid,
+					players: Array.from(Engine.players.values()),
+				}
+			})
+		}
+		if (!sock.CLOSED) {
+			 sock.close(1000)
+		}
+	}
+
+	sock.onerror = (ev: Event ) => {
+		console.error(`\nFailed to receive frame: `);
 		//Find the player with this socket and remove it
 		if (Engine.players.has(sockid)) {
 			const clientid = Engine.players.get(sockid)!.id;
@@ -201,12 +201,12 @@ async function handleWs(sock: WebSocket, Engine: any) {
 				}
 			})
 		}
-		if (!sock.isClosed) {
-			await sock.close(1000).catch(console.error);
+		if (!sock.CLOSED) {
+		 	sock.close(1000)
 		}
 	}
 }
-const FPS = 75;
+const FPS = 90;
 const Game = {
 	now: 0,
 	then: 0,
@@ -249,36 +249,33 @@ Engine.start = async (port: number) => {
 	Game.now = Date.now();
 	Game.then = Game.now;
 	Engine.loop()
-	
-	await listenAndServe(`:8080`, async (req: ServerRequest) => {
-		const { conn, r: bufReader, w: bufWriter, headers } = req;
-		if (headers.get("upgrade") === "websocket") {
-			acceptWebSocket({conn, bufReader, bufWriter, headers, }).then((sock) => {
-				handleWs(sock, Engine);
-			})
-			.catch(async (err) => {
-				console.error(`Failed to accept websocket: ${err}`);
-				await req.respond({ status: 400 });
-			});
+	await serve(async function (req: Request) {
+		const upgrade = req.headers.get("upgrade") || "";
+		const accessURL = new URL(req.url)
+		if (upgrade !== "" && upgrade.toLowerCase() === "websocket") {
+			console.log('\nUpgrade WS')
+			const { socket, response } = Deno.upgradeWebSocket(req);
+			handleWs(socket, Engine)
+			return response
 		} else {
-			if (req.url === '/' || req.url === '/index.html') {
-				const file = await serveFile(req, './index.html');
-				await req.respond(file)
+			if (accessURL.pathname === '/') {
+					const file = await serveFile(req, './index.html');
+					file.headers!.set('Content-Type', file.headers!.get('Content-Type') +'; charset=UTF-8')
+					// file.headers!.set('Cache-Control', 'private, max-age=31536000')
+					return file
 			} else {
-				const url = new URL(`http://localhost${req.url}`)
-				const filepath =  url.pathname
+				const filepath =  accessURL.pathname
 				const requestpath = `./server/${filepath}`
 				if (existsSync(requestpath)) {
 					const content = await serveFile(req, requestpath)
 					content.headers!.set('Content-Type', content.headers!.get('Content-Type') +'; charset=UTF-8')
-					content.headers!.set('Cache-Control', 'private, max-age=31536000')
-					return await req.respond(content)
+					// content.headers!.set('Cache-Control', 'private, max-age=31536000')
+					return content
 				} else {
-					await req.respond({ status: 404 })
+					return new Response("Error 404", { status: 404 })
 				}
 			}
 		}
-	})
+		}, {addr:'0.0.0.0:8080'}).catch(console.error)
 }
-
 export default Engine;

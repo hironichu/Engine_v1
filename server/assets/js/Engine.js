@@ -86,7 +86,7 @@ const Engine = {
 		}
 		Engine.playername = prompt("Choose a Username ");
 		if (!Engine.playername) Engine.playername = "bob";
-		Engine.ws = new WebSocket((window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost'  ? 'ws://localhost:8080': Engine.serverName), 'game');
+		Engine.ws = new WebSocket((window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost'  ? 'ws://localhost:8080': Engine.serverName));
 		var id = new Uint32Array(32);
 		const rand = window.crypto.getRandomValues(id);
 		const UUIDurl = URL.createObjectURL(new Blob(rand))
