@@ -256,7 +256,7 @@ Engine.start = async (port: number) => {
 			const { socket, response } = Deno.upgradeWebSocket(req);
 			handleWs(socket, Engine)
 			return response
-		} else {
+		} 
 			if (accessURL.pathname === '/') {
 					const file = `<!DOCTYPE html>
 					<html lang="en">
@@ -282,7 +282,7 @@ Engine.start = async (port: number) => {
 					new Response(file, { headers , status: 200})
 					// file.headers!.set('Cache-Control', 'private, max-age=31536000')
 					// return file
-			} else {
+			}
 				const filepath =  accessURL.pathname
 				const requestpath = `./server/${filepath}`
 				try {
@@ -301,9 +301,6 @@ Engine.start = async (port: number) => {
 				// } else {
 				// 	return new Response("Error 404", { status: 404 })
 				// }
-			}
-		}
-		return new Response("Error", { status: 404 })
 		}, {addr:'0.0.0.0:8080'}).catch(console.error)
 }
 export default Engine;
