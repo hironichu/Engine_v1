@@ -257,6 +257,7 @@ Engine.start = async (port: number) => {
 			handleWs(socket, Engine)
 			return response
 		} 
+		console.log(accessURL.pathname)
 			if (accessURL.pathname === '/') {
 					const file = `<!DOCTYPE html>
 					<html lang="en">
@@ -279,17 +280,46 @@ Engine.start = async (port: number) => {
 					</html>`
 					const headers = new Headers();
 					headers!.set('Content-Type', 'text/html; charset=UTF-8')
-					new Response(file, { headers , status: 200})
+					return new Response(file, { headers , status: 200})
 					// file.headers!.set('Cache-Control', 'private, max-age=31536000')
 					// return file
 			}
 				const filepath =  accessURL.pathname
 				const requestpath = `./server/${filepath}`
 				try {
-					const file = await Deno.readTextFile(requestpath)
+					const file = await Deno.readFile(requestpath)
+					//Depending on the file extension, set the correct content type
+					const ext = filepath.split('.').pop()
+					const headers = new Headers();
+					if (ext){
+						const contentType = new Map()
+						contentType.set('html', 'text/html')
+						contentType.set('css', 'text/css')
+						contentType.set('js', 'application/javascript')
+						contentType.set('png', 'image/png')
+						contentType.set('jpg', 'image/jpeg')
+						contentType.set('jpeg', 'image/jpeg')
+						contentType.set('gif', 'image/gif')
+						contentType.set('svg', 'image/svg+xml')
+						contentType.set('json', 'application/json')
+						contentType.set('woff', 'application/font-woff')
+						contentType.set('woff2', 'application/font-woff2')
+						contentType.set('ttf', 'application/font-ttf')
+						contentType.set('eot', 'application/vnd.ms-fontobject')
+						contentType.set('otf', 'application/font-otf')
+						contentType.set('mp3', 'audio/mpeg')
+						contentType.set('ogg', 'audio/ogg')
+						contentType.set('wav', 'audio/wav')
+						contentType.set('mp4', 'video/mp4')
+						contentType.set('webm', 'video/webm')
+						contentType.set('ogv', 'video/ogg')
+						//add more image type to the contentType map
+
+						headers!.set('Content-Type', contentType.get(ext) || 'text/plain')
+					}
 					// const headers = new Headers();
 					// headers!.set('Content-Type', 'text/html; charset=UTF-8')
-					return new Response(file, { status: 200})
+					return new Response(file, { headers, status: 200})
 				} catch (e) {
 					return new Response("Error 404", { status: 404 })
 				}
