@@ -46,28 +46,28 @@ export default class Camera {
 	public update () {
 
 		if (this.followed != null) {
-			// let x = this.followed.position.x + 64 / 2 - this.wView / 2 + this.followed.velocity.x * 0.5;
-			// let y = this.followed.position.y + 64 / 2 - this.hView / 2 + this.followed.velocity.y * 0.5;
-			// //Make the camera follow with a smooth movement (lerp)
-			// this.xView += (x - this.xView) * 0.1;
-			// this.yView += (y - this.yView) * 0.1;
-			
-			// if (this.axis === AXIS.HORIZONTAL || this.axis === AXIS.BOTH) {
-			// 	if (this.xView < this.worldRect.left) {
-			// 		this.xView = this.worldRect.left;
-			// 	}
-			// 	if (this.xView > this.worldRect.left + this.worldRect.width - this.wView) {
-			// 		this.xView = this.worldRect.left + this.worldRect.width - this.wView;
-			// 	}
-			// }
-			// if (this.axis === AXIS.VERTICAL || this.axis === AXIS.BOTH) {
-			// 	if (this.yView < this.worldRect.top) {
-			// 		this.yView = this.worldRect.top;
-			// 	}
-			// 	if (this.yView > this.worldRect.top + this.worldRect.height - this.hView) {
-			// 		this.yView = this.worldRect.top + this.worldRect.height - this.hView;
-			// 	}
-			// }
+			let x = this.followed.position.x + 64 / 2 - this.wView / 2 + this.followed.velocity.x;
+			let y = this.followed.position.y + 64 / 2 - this.hView / 2 + this.followed.velocity.y;
+			//Make the camera follow with a smooth movement (lerp)
+			this.xView += (x - this.xView);
+			this.yView += (y - this.yView);
+
+			if (this.axis == AXIS.HORIZONTAL || this.axis == AXIS.BOTH) {
+				if (this.xView < this.worldRect.width) {
+					this.xView = this.worldRect.width;
+				}
+				if (this.xView + this.wView > this.worldRect.width + this.worldRect.width) {
+					this.xView = this.worldRect.width + this.worldRect.width - this.wView;
+				}
+			}
+			if (this.axis == AXIS.VERTICAL || this.axis == AXIS.BOTH) {
+				if (this.yView < this.worldRect.height) {
+					this.yView = this.worldRect.height;
+				}
+				if (this.yView + this.hView > this.worldRect.height + this.worldRect.height) {
+					this.yView = this.worldRect.height + this.worldRect.height - this.hView;
+				}
+			}
 		}
 		this.viewportRect.set(this.xView, this.yView);
 

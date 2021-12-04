@@ -31,11 +31,11 @@ export default function Camera(xView, yView, viewportWidth, viewportHeight, worl
 	this.update = function() {
 
 		if (this.followed != null) {
-			let x = this.followed.position.x + this.followed.width / 2 - this.wView / 2 + this.followed.velocity.x ;
+			let x = this.followed.position.x + this.followed.width / 2 - this.wView / 2 + this.followed.velocity.x;
 			let y = this.followed.position.y + this.followed.height / 2 - this.hView / 2 + this.followed.velocity.y;
 			//Make the camera follow with a smooth movement (lerp)
-			this.xView += (x - this.xView) * 1;
-			this.yView += (y - this.yView) * 1;
+			this.xView += (x - this.xView);
+			this.yView += (y - this.yView);
 
 			if (this.axis == AXIS.HORIZONTAL || this.axis == AXIS.BOTH) {
 				if (this.xView < this.worldRect.x) {

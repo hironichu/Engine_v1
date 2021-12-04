@@ -52,10 +52,10 @@ export default function Player(playerdata) {
 		this.velocity.x = netdata.velocity.x;
 		this.velocity.y = netdata.velocity.y;
 		
-		this.position.x += (netdata.position.x - this.position.x) * Engine.Game.deltatime//netdata.movements.delta;
-		this.position.y += (netdata.position.y - this.position.y) * Engine.Game.deltatime//netdata.movements.delta;
-		this.velocity.x += (netdata.velocity.x - this.velocity.x) * Engine.Game.deltatime//netdata.movements.delta;
-		this.velocity.y += (netdata.velocity.y - this.velocity.y) * Engine.Game.deltatime//netdata.movements.delta;
+		this.position.x += (netdata.position.x - this.position.x) * Engine.Game.deltaTime - netdata.movements.delta;
+		this.position.y += (netdata.position.y - this.position.y) * Engine.Game.deltaTime - netdata.movements.delta;
+		this.velocity.x += (netdata.velocity.x - this.velocity.x) * Engine.Game.deltaTime - netdata.movements.delta;
+		this.velocity.y += (netdata.velocity.y - this.velocity.y) * Engine.Game.deltaTime - netdata.movements.delta;
 		// this.checkPlayerCollision()
 		//Update the health of the player
 		this.health = netdata.health;
@@ -78,6 +78,7 @@ export default function Player(playerdata) {
 				this.position.y =  Engine.Game.currentmap.height - this.height / 2;
 				this.velocity.y = 0;
 			}
+			// Engine.Game.camera.update();
 		}
 		this.posinmap.x = (this.position.x - this.width / 2) - Engine.Game.camera.xView;
 		this.posinmap.y = (this.position.y - this.height / 2) - Engine.Game.camera.yView;
