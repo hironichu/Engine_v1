@@ -27,7 +27,7 @@ export class Player {
 		this.sid = sid;
 		this.name = playerdata.name;
 		this.position = new Vector(playerdata.position.x, playerdata.position.y);
-		this.speed = 150;
+		this.speed = 140;
 		this.velocity = new Vector(0, 0);
 		this.sprite = playerdata.sprite;
 		this.health = 100;
@@ -35,7 +35,7 @@ export class Player {
 		this.energy = 100;
 		this.maxenergy = 100;
 		this.level = 5;
-		this.mass = 2;
+		this.mass = 4;
 		this.map =	'default';
 		this.posinmap = new Vector(0, 0);
 		this.screenWidth = playerdata.screenWidth;
@@ -59,6 +59,7 @@ export class Player {
 			// console.log((update.inputs))
 			const inputs = new Map((update.inputs));
 			// const inputs = new Map(update.inputs);
+			this.movements.moving = true;
 			this.movements.inputs = inputs;
 			this.movements.weight = (this.mass * 0.98)
 			this.movements.delta = Engine.Game.deltaTime
@@ -98,17 +99,19 @@ export class Player {
 						data: this
 					}
 				}));
-
 			})
+			this.movements.moving = false;
 			// })
 		}
 	}
 	move (Engine: any) {
 		// this.CheckColideMaps(Engine)
-		this.velocity.scaler(0.80);
+		this.movements.moving = true;
+		this.velocity.scaler(0.86);
 		this.position.add(this.velocity);
 		this.posinmap.add(this.velocity);
 		Engine.Cameras.get(this.sid).update()
+		this.movements.moving = false;
 	}
 	private checkPlayerCollision (Engine: any) {
 		[...Engine.players].forEach(([sid, player]) => {
