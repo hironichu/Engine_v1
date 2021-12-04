@@ -52,10 +52,10 @@ export default function Player(playerdata) {
 		this.velocity.x = netdata.velocity.x;
 		this.velocity.y = netdata.velocity.y;
 		
-		this.position.x += (netdata.position.x - this.position.x) * netdata.movements.delta;
-		this.position.y += (netdata.position.y - this.position.y) * netdata.movements.delta;
-		this.velocity.x += (netdata.velocity.x - this.velocity.x) * netdata.movements.delta;
-		this.velocity.y += (netdata.velocity.y - this.velocity.y) * netdata.movements.delta;
+		this.position.x += (netdata.position.x - this.position.x) * Engine.Game.deltatime//netdata.movements.delta;
+		this.position.y += (netdata.position.y - this.position.y) * Engine.Game.deltatime//netdata.movements.delta;
+		this.velocity.x += (netdata.velocity.x - this.velocity.x) * Engine.Game.deltatime//netdata.movements.delta;
+		this.velocity.y += (netdata.velocity.y - this.velocity.y) * Engine.Game.deltatime//netdata.movements.delta;
 		// this.checkPlayerCollision()
 		//Update the health of the player
 		this.health = netdata.health;
@@ -86,21 +86,17 @@ export default function Player(playerdata) {
 
 	this.move = function() {
 		this.behind()
-		// this.checkMapCollision()
-		this.velocity.scaler(0.80)
-		//Check if the player is coliding with another player
-		this.position.add(this.velocity);
-		this.posinmap.add(this.velocity);
+		this.velocity.scaler(0.85)
 		if (this.self) {
 			Engine.Game.camera.update();
 		}
+		this.position.add(this.velocity);
+		this.posinmap.add(this.velocity);
 	}
 	this.checkPlayerCollision = function() {
 		[...Engine.Game.Players].forEach(([sid, player]) => {
 			if (player != this) {
-				if (this.collision(player)) {
-					this.position.add(this.velocity.scaler(-1));
-					this.velocity.scaler(0);
+				if (this.collision(player)) {t
 				}
 			}
 		})
@@ -177,7 +173,7 @@ export default function Player(playerdata) {
 	
 		let color = '#00ff00'
 		
-		if (!this.self) {
+		// if (!this.self) {
 			if (this.health < 20) {
 				color = "red"
 				// Engine.CTX[2].canvas.style.boxShadow = `inset 0 0 100px ${red}`;
@@ -202,7 +198,7 @@ export default function Player(playerdata) {
 			Engine.CTX[2].fillText(Math.round(this.posinmap.x) + ',' + Math.round(this.posinmap.y), posX + 80, posY - 5);
 			Engine.CTX[2].fillStyle = '#fff';
 			Engine.CTX[2].fillText(Math.round(this.position.x) + ',' + Math.round(this.position.y), posX + 80, posY + 5);
-		}
+		// }
 
 		const hbplayer = {
 			x: this.x ,

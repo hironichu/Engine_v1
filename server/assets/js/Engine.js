@@ -1,4 +1,4 @@
-const fps = 75;
+const fps = 80;
 const interval = 1000 / fps;
 const Engine = {
 	version: '1.0.0',
@@ -37,12 +37,14 @@ const Engine = {
 		DOMCanvasElem.insertAdjacentElement('afterbegin', gameGroundCanvas);
 		DOMCanvasElem.insertAdjacentElement('afterbegin', gameInteractiveCanvas);
 
-		gameBackdropCanvas.width = window.innerWidth;
+		gameBackdropCanvas.width = window.innerWidth
 		gameBackdropCanvas.height = window.innerHeight
 		gameGroundCanvas.width = window.innerWidth;
 		gameGroundCanvas.height = window.innerHeight
 		gameInteractiveCanvas.width = window.innerWidth;
 		gameInteractiveCanvas.height = window.innerHeight
+		//Zoom in on the canvas
+
 		window.addEventListener('resize', (event) => {
 			gameBackdropCanvas.width = window.innerWidth;
 			gameBackdropCanvas.height = window.innerHeight
@@ -54,7 +56,10 @@ const Engine = {
 		Engine.CTX[0] = gameBackdropCanvas.getContext('2d');
 		Engine.CTX[1] = gameGroundCanvas.getContext('2d');
 		Engine.CTX[2] = gameInteractiveCanvas.getContext('2d');
-
+		//Scale the canvas to the window size
+		// Engine.CTX[0].scale(1.2, 1.3);
+		// Engine.CTX[1].scale(1.3, 1.3);
+		// Engine.CTX[2].scale(1.2, 1.3);
 		Engine.Cursor = new Engine.Vector( window.innerWidth / 2, window.innerHeight / 2);
 		Engine.CursorinMap = new Engine.Vector(0,0);
 		Engine.gravity = 0.98;

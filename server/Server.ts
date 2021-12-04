@@ -128,20 +128,23 @@ function handleWs(sock: WebSocket, Engine: any) {
 	const sockid = crypto.randomUUID()
 	console.log(`New Socket ID: ${sockid}`)
 	sock.onopen = () => console.log("socket opened");
-	sock.onmessage = async (event: MessageEvent<any>) => {
+	sock.onmessage = (event: MessageEvent<any>) => {
 		if (typeof event.data === "string") {
 			try {
 				const message = JSON.parse(event.data);
 				if (message.id && message.type && message.data) {
 					if (message.type === 'init' && !Engine.socks.has(sockid)) {
 						Engine.socks.set(sockid, sock);
-						await initplayer(sockid, message.data.wsid, message);
+						initplayer(sockid, message.data.wsid, message);
 					} else {
 						switch (message.type) {
 							case 'player.move':
 								if (Engine.players.has(sockid)) {
 									const player = Engine.players.get(sockid)
 									player.update(Engine, message);
+								} else {
+									console.log("Player not found")
+									sock.close(1000, "Player not found");
 								}
 							break;
 							case 'player.attack':
@@ -234,21 +237,44 @@ Engine.loop = () => {
 	Game.now = Date.now();
 	Game.delta = Game.now - Game.then;
 	Game.deltaTime = Game.delta / 1000;
+	
 	if(Game.delta > Game.interval) {
-		
-		const text = `TickRate: ${Math.round(1 / Game.deltaTime)} || Players: ${Engine.players.size}  `;
-		Deno.stdout.writeSync(new TextEncoder().encode(`\r${text}`));
-		//Listen for Stdin
 		Game.update();
-		Game.then = Game.now - (Game.delta % Game.interval);
+		Game.then = Game.now -(Game.delta % Game.interval);
+		// Deno.stdout.writeSync(new TextEncoder().encode("\x1B[2J\x1B[0f"));
+		// const text = `\rRam Usage: 💾 ${Math.round(Deno.memoryUsage().heapUsed / 1024 / 1024)} MB
+		// \rPlayers: ${Engine.players.size} / 50
+		// \rEvents : ${Engine.events.size}
+		// \rList :
+		// \r${Array.from(Engine.players.values()).map((p: any) => {return `ID : ${p.id} - Username : ${p.name}`}).join("\n")}`;
+		// Deno.stdout.writeSync(new TextEncoder().encode(`\r${text}`));
 	}
 }
 
 Engine.start = async (port: number) => {
+	//print a countdown of 3 seconds
+	for (let i = 2; i > 0; i--) {
+		//clear the screen
+		Deno.stdout.writeSync(new TextEncoder().encode('\x1Bc'));
+		//Write a nice Ascii art with the text Frostbite
+		const text = `\r
+		\r ______             _   _     _ _       
+		\r|  ____|           | | | |   (_) |      
+		\r| |__ _ __ ___  ___| |_| |__  _| |_ ___ 
+		\r|  __| '__/ _ \\/ __| __| '_ \\| | __/ _ \\
+		\r| |  | | | (_) \\__ \\ |_| |_) | | ||  __/
+		\r|_|  |_|  \\___/|___/\\__|_.__/|_|\\__\\___|
+		\r\r
+		\rGame engine starting on port ${port} in ${i} seconds
+		\r`;
+		Deno.stdout.writeSync(new TextEncoder().encode(`\r${text}`));
+		await new Promise(r => setTimeout(r, 1000));
+	}
 	Engine.Game = Game;
 	Game.now = Date.now();
 	Game.then = Game.now;
 	Engine.loop()
+	//Every 2 seconde update console
 	await serve(async function (req: Request) {
 		const upgrade = req.headers.get("upgrade") || "";
 		const accessURL = new URL(req.url)

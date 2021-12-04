@@ -46,18 +46,28 @@ export default class Camera {
 	public update () {
 
 		if (this.followed != null) {
-			if (this.axis == AXIS.HORIZONTAL || this.axis === AXIS.BOTH) {
-				if (this.followed.position.x - this.xView + this.xDeadZone > this.wView)
-					this.xView = this.followed.position.x - (this.wView - this.xDeadZone);
-				else if (this.followed.position.x - this.xDeadZone < this.xView)
-					this.xView = this.followed.position.x - this.xDeadZone;
-			}
-			if (this.axis == AXIS.VERTICAL || this.axis === AXIS.BOTH) {
-				if (this.followed.position.y - this.yView + this.yDeadZone > this.hView)
-					this.yView = this.followed.position.y - (this.hView - this.yDeadZone);
-				else if (this.followed.position.y - this.yDeadZone < this.yView)
-					this.yView = this.followed.position.y - this.yDeadZone;
-			}
+			// let x = this.followed.position.x + 64 / 2 - this.wView / 2 + this.followed.velocity.x * 0.5;
+			// let y = this.followed.position.y + 64 / 2 - this.hView / 2 + this.followed.velocity.y * 0.5;
+			// //Make the camera follow with a smooth movement (lerp)
+			// this.xView += (x - this.xView) * 0.1;
+			// this.yView += (y - this.yView) * 0.1;
+			
+			// if (this.axis === AXIS.HORIZONTAL || this.axis === AXIS.BOTH) {
+			// 	if (this.xView < this.worldRect.left) {
+			// 		this.xView = this.worldRect.left;
+			// 	}
+			// 	if (this.xView > this.worldRect.left + this.worldRect.width - this.wView) {
+			// 		this.xView = this.worldRect.left + this.worldRect.width - this.wView;
+			// 	}
+			// }
+			// if (this.axis === AXIS.VERTICAL || this.axis === AXIS.BOTH) {
+			// 	if (this.yView < this.worldRect.top) {
+			// 		this.yView = this.worldRect.top;
+			// 	}
+			// 	if (this.yView > this.worldRect.top + this.worldRect.height - this.hView) {
+			// 		this.yView = this.worldRect.top + this.worldRect.height - this.hView;
+			// 	}
+			// }
 		}
 		this.viewportRect.set(this.xView, this.yView);
 
