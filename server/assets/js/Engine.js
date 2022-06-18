@@ -83,11 +83,11 @@ const Engine = {
 		Engine.Game = await (await import('./Game.js')).Game;
 		await console.info(`Asset loaded [${Math.round(performance.now() - time)}ms]`)
 		if (!(window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost')) {
-			Engine.serverName = prompt("Server URL : ");
-			if (!Engine.serverName || Engine.serverName === "") {
-				await Engine.Game.stop("No server name provided, stopping the game");
-				return;
-			}
+			Engine.serverName = "wss://frostbite-engine.deno.dev"
+			// if (!Engine.serverName || Engine.serverName === "") {
+			// 	await Engine.Game.stop("No server name provided, stopping the game");
+			// 	return;
+			// }
 		}
 		Engine.playername = prompt("Choose a Username ");
 		if (!Engine.playername) Engine.playername = "bob";
