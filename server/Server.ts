@@ -255,19 +255,19 @@ Engine.start = async (port: number) => {
 	//print a countdown of 3 seconds
 	for (let i = 2; i > 0; i--) {
 		//clear the screen
-		Deno.stdout.writeSync(new TextEncoder().encode('\x1Bc'));
-		//Write a nice Ascii art with the text Frostbite
-		const text = `\r
-		\r ______             _   _     _ _       
-		\r|  ____|           | | | |   (_) |      
-		\r| |__ _ __ ___  ___| |_| |__  _| |_ ___ 
-		\r|  __| '__/ _ \\/ __| __| '_ \\| | __/ _ \\
-		\r| |  | | | (_) \\__ \\ |_| |_) | | ||  __/
-		\r|_|  |_|  \\___/|___/\\__|_.__/|_|\\__\\___|
-		\r\r
-		\rGame engine starting on port ${port} in ${i} seconds
-		\r`;
-		Deno.stdout.writeSync(new TextEncoder().encode(`\r${text}`));
+		// Deno.stdout.writeSync(new TextEncoder().encode('\x1Bc'));
+		// //Write a nice Ascii art with the text Frostbite
+		// const text = `\r
+		// \r ______             _   _     _ _       
+		// \r|  ____|           | | | |   (_) |      
+		// \r| |__ _ __ ___  ___| |_| |__  _| |_ ___ 
+		// \r|  __| '__/ _ \\/ __| __| '_ \\| | __/ _ \\
+		// \r| |  | | | (_) \\__ \\ |_| |_) | | ||  __/
+		// \r|_|  |_|  \\___/|___/\\__|_.__/|_|\\__\\___|
+		// \r\r
+		// \rGame engine starting on port ${port} in ${i} seconds
+		// \r`;
+		// Deno.stdout.writeSync(new TextEncoder().encode(`\r${text}`));
 		await new Promise(r => setTimeout(r, 1000));
 	}
 	Engine.Game = Game;
