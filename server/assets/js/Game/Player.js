@@ -195,10 +195,10 @@ export default function Player(playerdata) {
 			Engine.CTX[2].fillText(this.health + '/' + this.maxHealth, posX + 32, posY - 15);
 			Engine.CTX[2].fillStyle = '#fff';
 			Engine.CTX[2].fillText(this.name, posX + 32, posY - 25);
+			// Engine.CTX[2].fillStyle = '#fff';
+			// Engine.CTX[2].fillText(Math.round(this.posinmap.x) + ',' + Math.round(this.posinmap.y), posX + 32 , posY - 50);
 			Engine.CTX[2].fillStyle = '#fff';
-			Engine.CTX[2].fillText(Math.round(this.posinmap.x) + ',' + Math.round(this.posinmap.y), posX + 80, posY - 5);
-			Engine.CTX[2].fillStyle = '#fff';
-			Engine.CTX[2].fillText(Math.round(this.position.x) + ',' + Math.round(this.position.y), posX + 80, posY + 5);
+			Engine.CTX[2].fillText(Math.round(this.position.x) + ',' + Math.round(this.position.y), posX + 32, posY - 40);
 		// }
 
 		const hbplayer = {

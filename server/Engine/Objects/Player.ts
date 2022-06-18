@@ -81,16 +81,17 @@ export class Player {
 				this.velocity.y += (this.speed * Engine.Game.deltaTime) / this.movements.weight
 			}
 			// this.checkPlayerCollision(Engine)
-			const playerCam = Engine.Cameras.get(this.sid);
-			const newVisible = [...Engine.Cameras].filter(([sid, cam]) => cam.map === this.map && cam.xView > playerCam.xView - ((this.screenWidth / 2) + 256) && cam.xView < playerCam.xView + ((this.screenWidth / 2) + 256) && cam.yView > playerCam.yView - ((this.screenHeight / 2) + 256) && cam.yView < playerCam.yView + ((this.screenHeight / 2) + 256)).map(([sid, cam]) => cam.followed.sid)
+			// const playerCam = Engine.Cameras.get(this.sid);
+			// const newVisible = [...Engine.Cameras].filter(([sid, cam]) => cam.map === this.map && cam.xView > playerCam.xView - ((this.screenWidth / 2) + 256) && cam.xView < playerCam.xView + ((this.screenWidth / 2) + 256) && cam.yView > playerCam.yView - ((this.screenHeight / 2) + 256) && cam.yView < playerCam.yView + ((this.screenHeight / 2) + 256)).map(([sid, cam]) => cam.followed.sid)
 			//Compare the new visible players with the old visible players and send the new ones to the client
-			const newVisiblePlayers = newVisible.filter((player) => !this.visiblePlayers.includes(player.sid))
-			const oldVisiblePlayers = this.visiblePlayers.filter((player) => !newVisible.includes(player.sid))
-			this.visiblePlayers = newVisiblePlayers
+			// const newVisiblePlayers = newVisible.filter((player) => !this.visiblePlayers.includes(player.sid))
+			// const oldVisiblePlayers = this.visiblePlayers.filter((player) => !newVisible.includes(player.sid))
+			// this.visiblePlayers = newVisiblePlayers
 			// newVisiblePlayers.push(this.sid)
-			newVisiblePlayers.forEach((playersid) => {
+			Engine.players.forEach((_: any, socketid: WebSocket) => {
+				// console.log(socketid)
 				// console.log(playersid)
-				const sock = Engine.socks.get(playersid)
+				const sock = Engine.socks.get(socketid)
 				sock.send(JSON.stringify({
 					type: 'player.update',
 					data: {
