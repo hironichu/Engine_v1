@@ -1,5 +1,7 @@
-import { serve, ConnInfo} from "https://deno.land/std@0.145.0/http/server.ts";
-import { serveFile } from "https://deno.land/std@0.145.0/http/file_server.ts";
+import { serve, ConnInfo} from "https://deno.land/std@0.144.0/http/server.ts";
+// import { serveFile } from 'https://deno.land/std@0.116.0/http/file_server.ts'
+// import  "https://deno.land/x/cliffy@v0.20.1/mod.ts"
+import { serveFile } from "https://deno.land/std@0.144.0/http/file_server.ts";
 
 import Vector from './Engine/Maths/Vector.ts'
 import { Player } from './Engine/Objects/Player.ts'
@@ -43,33 +45,17 @@ Engine.randomY = function (map: string) {
 
 
 
-
+let testx = Engine.randomX('default')
+let testy = Engine.randomY('default')
 const initplayer = (socketid: string, clientid: string, message: any) => {
 	console.log(`New Player => ID : ${clientid}| Name : ${message.data.name}`)
 	const socket = Engine.socks.get(socketid)
 	const pos = new Vector(0,0)
-	const testx = Engine.randomX('default')
-	const testy = Engine.randomY('default')
-	// if (message.data.name === "bob") {
-	// 	pos.x = Engine.randomX('default')
-	// 	pos.y = Engine.randomY('default');
-	// 	sprite = "player_default";
-	// } else if (message.data.name === "alice") {
-	// 	pos.x = Engine.randomX('default')
-	// 	pos.y = Engine.randomY('default');
-	// 	sprite = "player_girl"
-	// } else {
-	// 	pos.x = testx;
-	// 	pos.y = testy;
-	// 	testx += 64;
-	// 	// testy += 32;
-	// 	sprite = "player_default";
-	// }
-	//Select a random sprite between alice or bob
-	const sprite = Math.random() > 0.5 ? "player_default" : "player_girl";
-	pos.x = testx;
-	pos.y = testy;
-	if (sprite) {
+	let sprite = "";
+	pos.x = Engine.randomX('default')
+	pos.y = Engine.randomY('default');
+	sprite = Math.random() > 0.5 ? "player_default" : "player_girl";
+	if (sprite !== "") {
 		const player = new Player(socketid,clientid, {
 			position: pos,
 			name: message.data.name,
@@ -80,15 +66,9 @@ const initplayer = (socketid: string, clientid: string, message: any) => {
 		}, Engine)
 		Engine.Cameras.set(socketid, new Camera(player.position.x, player.position.y, Math.min(Engine.Maps[player.map].width, player.screenWidth), Math.min(Engine.Maps[player.map].height, player.screenHeight), Engine.Maps[player.map].width, Engine.Maps[player.map].height, player.map));
 		Engine.Cameras.get(socketid).follow(player, Math.min(Engine.Maps[player.map].width, player.screenWidth) / 2, Math.min(Engine.Maps[player.map].height, player.screenHeight) / 2);
-		const playerCam = Engine.Cameras.get(socketid);
+		// const playerCam = Engine.Cameras.get(socketid);
 		
-		//find a better way to get visible players
-		const visiblePlayers = [...Engine.players].filter(([sid, player]) => {
-			return player.map === playerCam.map && player.position.x > playerCam.x - playerCam.width / 2 && player.position.x < playerCam.x + playerCam.width / 2 && player.position.y > playerCam.y - playerCam.height / 2 && player.position.y < playerCam.y + playerCam.height / 2;
-		}
-		).map(([sid, player]) => {
-			return player;
-		});
+		const visiblePlayers = [...Engine.Cameras].filter(([sid, cam]) => cam.map === player.map && sid !== socketid ).map(([sid, cam]) => cam.followed);
 		player.visiblePlayers = visiblePlayers;
 		
 		socket.send(JSON.stringify({
@@ -135,15 +115,17 @@ Engine.sendToAll = function (sender: WebSocket, data: any) {
 function handleWs(sock: WebSocket, Engine: any) {
 	const sockid = crypto.randomUUID()
 	console.log(`New Socket ID: ${sockid}`)
-	sock.onopen = () => console.log("socket opened");
-	sock.onmessage = (event: MessageEvent<any>) => {
+	sock.onopen = () => {
+		// console.log("socket opened");
+	}
+	sock.onmessage = async (event: MessageEvent<any>) => {
 		if (typeof event.data === "string") {
 			try {
 				const message = JSON.parse(event.data);
 				if (message.id && message.type && message.data) {
 					if (message.type === 'init' && !Engine.socks.has(sockid)) {
 						Engine.socks.set(sockid, sock);
-						initplayer(sockid, message.data.wsid, message);
+						await initplayer(sockid, message.data.wsid, message);
 					} else {
 						switch (message.type) {
 							case 'player.move':
@@ -171,21 +153,21 @@ function handleWs(sock: WebSocket, Engine: any) {
 			sock.close(1002, 'invalid message type')
 		}
 	}
-	sock.onclose = async (event: CloseEvent) => {
+	sock.onclose = (event: CloseEvent) => {
 		const { code, reason } = event;
 		if (Engine.players.has(sockid)){
 			const clientid = Engine.players.get(sockid)!.id;
 			Engine.players.delete(sockid);
 			Engine.socks.delete(sockid);
 			Engine.Cameras.delete(sockid);
-			await Promise.all([Engine.broadcast({
+			Engine.broadcast({
 				type: 'player.disconnect',
 				data: {
 					id: sockid,
 					clientid: clientid,
 					players: Array.from(Engine.players.values()),
 				}
-			})]);
+			})
 		}
 		if (!sock.CLOSED) {
 			 sock.close(1000)
@@ -230,26 +212,20 @@ Game.update = async function () {
 	}))
 
 	if (Engine.events.size > 0) {
-		await Promise.all([(async () => {
-			for await (const [index, event] of Engine.events) {
-				// console.info(`\nTriggered Event ${index}`)
-				event.call(this);
-			}
-		})()]);
+		for await (const [index, event] of Engine.events) {
+			console.info(`\nTriggered Event ${index}`)
+			event.call(this);
+		}
 		Engine.events.clear();
 	}
 }
-Engine.loop = async () => {
+Engine.loop = () => {
 	Engine.requestAnimationFrame(Engine.loop);
 	Game.now = Date.now();
 	Game.delta = Game.now - Game.then;
 	Game.deltaTime = Game.delta / 1000;
 	if(Game.delta > Game.interval) {
-		
-		// const text = `TickRate: ${Math.round(1 / Game.deltaTime)} || Players: ${Engine.players.size}  `;
-		// Deno.stdout.writeSync(new TextEncoder().encode(`\r${text}`));
-		//Listen for Stdin
-		await Promise.all([Game.update()]);
+		Game.update();
 		Game.then = Game.now - (Game.delta % Game.interval);
 	}
 }
@@ -263,7 +239,7 @@ Engine.start = async (port: number) => {
 		const upgrade = req.headers.get("upgrade") || "";
 		const accessURL = new URL(req.url)
 		if (upgrade !== "" && upgrade.toLowerCase() === "websocket") {
-			// console.log('\nUpgrade WS')
+			console.log('\nUpgrade WS')
 			const { socket, response } = Deno.upgradeWebSocket(req);
 			handleWs(socket, Engine)
 			return response
@@ -291,14 +267,16 @@ Engine.start = async (port: number) => {
 					</html>`
 					const headers = new Headers();
 					headers!.set('Content-Type', 'text/html; charset=UTF-8')
+					headers!.set('Cache-Control', 'no-cache')
 					return new Response(file, { headers , status: 200})
-					// file.headers!.set('Cache-Control', 'private, max-age=31536000')
-					// return file
 			}
 				const filepath =  accessURL.pathname
 				const requestpath = `./server/${filepath}`
 				try {
-					return await serveFile(req, requestpath)
+					const file = await serveFile(req, requestpath)
+					file.headers.set('Cache-Control', 'no-cache')
+					return file
+
 				} catch (e) {
 					return new Response("Error 404", { status: 404 })
 				}
