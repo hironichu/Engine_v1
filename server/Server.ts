@@ -1,7 +1,5 @@
-import { serve, ConnInfo} from "https://deno.land/std@0.144.0/http/server.ts";
-// import { serveFile } from 'https://deno.land/std@0.116.0/http/file_server.ts'
-// import  "https://deno.land/x/cliffy@v0.20.1/mod.ts"
-import { serveFile } from "https://deno.land/std@0.144.0/http/file_server.ts";
+import { serve, ConnInfo} from "https://deno.land/std@0.145.0/http/server.ts";
+import { serveFile } from "https://deno.land/std@0.145.0/http/file_server.ts";
 
 import Vector from './Engine/Maths/Vector.ts'
 import { Player } from './Engine/Objects/Player.ts'
@@ -45,29 +43,33 @@ Engine.randomY = function (map: string) {
 
 
 
-let testx = Engine.randomX('default')
-let testy = Engine.randomY('default')
+
 const initplayer = (socketid: string, clientid: string, message: any) => {
 	console.log(`New Player => ID : ${clientid}| Name : ${message.data.name}`)
 	const socket = Engine.socks.get(socketid)
 	const pos = new Vector(0,0)
-	let sprite = "";
-	if (message.data.name === "bob") {
-		pos.x = Engine.randomX('default')
-		pos.y = Engine.randomY('default');
-		sprite = "player_default";
-	} else if (message.data.name === "alice") {
-		pos.x = Engine.randomX('default')
-		pos.y = Engine.randomY('default');
-		sprite = "player_girl"
-	} else {
-		pos.x = testx;
-		pos.y = testy;
-		testx += 64;
-		// testy += 32;
-		sprite = "player_default";
-	}
-	if (sprite !== "") {
+	const testx = Engine.randomX('default')
+	const testy = Engine.randomY('default')
+	// if (message.data.name === "bob") {
+	// 	pos.x = Engine.randomX('default')
+	// 	pos.y = Engine.randomY('default');
+	// 	sprite = "player_default";
+	// } else if (message.data.name === "alice") {
+	// 	pos.x = Engine.randomX('default')
+	// 	pos.y = Engine.randomY('default');
+	// 	sprite = "player_girl"
+	// } else {
+	// 	pos.x = testx;
+	// 	pos.y = testy;
+	// 	testx += 64;
+	// 	// testy += 32;
+	// 	sprite = "player_default";
+	// }
+	//Select a random sprite between alice or bob
+	const sprite = Math.random() > 0.5 ? "player_default" : "player_girl";
+	pos.x = testx;
+	pos.y = testy;
+	if (sprite) {
 		const player = new Player(socketid,clientid, {
 			position: pos,
 			name: message.data.name,
@@ -80,7 +82,13 @@ const initplayer = (socketid: string, clientid: string, message: any) => {
 		Engine.Cameras.get(socketid).follow(player, Math.min(Engine.Maps[player.map].width, player.screenWidth) / 2, Math.min(Engine.Maps[player.map].height, player.screenHeight) / 2);
 		const playerCam = Engine.Cameras.get(socketid);
 		
-		const visiblePlayers = [...Engine.Cameras].filter(([sid, cam]) => cam.map === player.map && sid !== socketid && cam.xView > playerCam.xView - ((player.screenWidth / 2) + 256) && cam.xView < playerCam.xView + ((player.screenWidth / 2) + 256) && cam.yView > playerCam.yView - ((player.screenHeight / 2) + 256) && cam.yView < playerCam.yView + ((player.screenHeight / 2) + 256)).map(([sid, cam]) => cam.followed);
+		//find a better way to get visible players
+		const visiblePlayers = [...Engine.players].filter(([sid, player]) => {
+			return player.map === playerCam.map && player.position.x > playerCam.x - playerCam.width / 2 && player.position.x < playerCam.x + playerCam.width / 2 && player.position.y > playerCam.y - playerCam.height / 2 && player.position.y < playerCam.y + playerCam.height / 2;
+		}
+		).map(([sid, player]) => {
+			return player;
+		});
 		player.visiblePlayers = visiblePlayers;
 		
 		socket.send(JSON.stringify({
@@ -128,14 +136,14 @@ function handleWs(sock: WebSocket, Engine: any) {
 	const sockid = crypto.randomUUID()
 	console.log(`New Socket ID: ${sockid}`)
 	sock.onopen = () => console.log("socket opened");
-	sock.onmessage = async (event: MessageEvent<any>) => {
+	sock.onmessage = (event: MessageEvent<any>) => {
 		if (typeof event.data === "string") {
 			try {
 				const message = JSON.parse(event.data);
 				if (message.id && message.type && message.data) {
 					if (message.type === 'init' && !Engine.socks.has(sockid)) {
 						Engine.socks.set(sockid, sock);
-						await initplayer(sockid, message.data.wsid, message);
+						initplayer(sockid, message.data.wsid, message);
 					} else {
 						switch (message.type) {
 							case 'player.move':
@@ -163,21 +171,21 @@ function handleWs(sock: WebSocket, Engine: any) {
 			sock.close(1002, 'invalid message type')
 		}
 	}
-	sock.onclose = (event: CloseEvent) => {
+	sock.onclose = async (event: CloseEvent) => {
 		const { code, reason } = event;
 		if (Engine.players.has(sockid)){
 			const clientid = Engine.players.get(sockid)!.id;
 			Engine.players.delete(sockid);
 			Engine.socks.delete(sockid);
 			Engine.Cameras.delete(sockid);
-			Engine.broadcast({
+			await Promise.all([Engine.broadcast({
 				type: 'player.disconnect',
 				data: {
 					id: sockid,
 					clientid: clientid,
 					players: Array.from(Engine.players.values()),
 				}
-			})
+			})]);
 		}
 		if (!sock.CLOSED) {
 			 sock.close(1000)
@@ -222,14 +230,16 @@ Game.update = async function () {
 	}))
 
 	if (Engine.events.size > 0) {
-		for await (const [index, event] of Engine.events) {
-			console.info(`\nTriggered Event ${index}`)
-			event.call(this);
-		}
+		await Promise.all([(async () => {
+			for await (const [index, event] of Engine.events) {
+				// console.info(`\nTriggered Event ${index}`)
+				event.call(this);
+			}
+		})()]);
 		Engine.events.clear();
 	}
 }
-Engine.loop = () => {
+Engine.loop = async () => {
 	Engine.requestAnimationFrame(Engine.loop);
 	Game.now = Date.now();
 	Game.delta = Game.now - Game.then;
@@ -239,7 +249,7 @@ Engine.loop = () => {
 		// const text = `TickRate: ${Math.round(1 / Game.deltaTime)} || Players: ${Engine.players.size}  `;
 		// Deno.stdout.writeSync(new TextEncoder().encode(`\r${text}`));
 		//Listen for Stdin
-		Game.update();
+		await Promise.all([Game.update()]);
 		Game.then = Game.now - (Game.delta % Game.interval);
 	}
 }
@@ -253,7 +263,7 @@ Engine.start = async (port: number) => {
 		const upgrade = req.headers.get("upgrade") || "";
 		const accessURL = new URL(req.url)
 		if (upgrade !== "" && upgrade.toLowerCase() === "websocket") {
-			console.log('\nUpgrade WS')
+			// console.log('\nUpgrade WS')
 			const { socket, response } = Deno.upgradeWebSocket(req);
 			handleWs(socket, Engine)
 			return response
@@ -289,50 +299,9 @@ Engine.start = async (port: number) => {
 				const requestpath = `./server/${filepath}`
 				try {
 					return await serveFile(req, requestpath)
-					// const file = await Deno.readFile(requestpath)
-					// //Depending on the file extension, set the correct content type
-					// const ext = filepath.split('.').pop()
-					// const headers = new Headers();
-					// if (ext){
-					// 	const contentType = new Map()
-					// 	contentType.set('html', 'text/html')
-					// 	contentType.set('css', 'text/css')
-					// 	contentType.set('js', 'application/javascript')
-					// 	contentType.set('png', 'image/png')
-					// 	contentType.set('jpg', 'image/jpeg')
-					// 	contentType.set('jpeg', 'image/jpeg')
-					// 	contentType.set('gif', 'image/gif')
-					// 	contentType.set('svg', 'image/svg+xml')
-					// 	contentType.set('json', 'application/json')
-					// 	contentType.set('woff', 'application/font-woff')
-					// 	contentType.set('woff2', 'application/font-woff2')
-					// 	contentType.set('ttf', 'application/font-ttf')
-					// 	contentType.set('eot', 'application/vnd.ms-fontobject')
-					// 	contentType.set('otf', 'application/font-otf')
-					// 	contentType.set('mp3', 'audio/mpeg')
-					// 	contentType.set('ogg', 'audio/ogg')
-					// 	contentType.set('wav', 'audio/wav')
-					// 	contentType.set('mp4', 'video/mp4')
-					// 	contentType.set('webm', 'video/webm')
-					// 	contentType.set('ogv', 'video/ogg')
-					// 	//add more image type to the contentType map
-
-					// 	headers!.set('Content-Type', contentType.get(ext) || 'text/plain')
-					// }
-					// // const headers = new Headers();
-					// // headers!.set('Content-Type', 'text/html; charset=UTF-8')
-					// return new Response(file, { headers, status: 200})
 				} catch (e) {
 					return new Response("Error 404", { status: 404 })
 				}
-				// if (existsSync(requestpath)) {
-				// 	const content = await serveFile(req, requestpath)
-				// 	content.headers!.set('Content-Type', content.headers!.get('Content-Type') +'; charset=UTF-8')
-				// 	// content.headers!.set('Cache-Control', 'private, max-age=31536000')
-				// 	return content
-				// } else {
-				// 	return new Response("Error 404", { status: 404 })
-				// }
 		}, {port:8080}).catch(console.error)
 }
 export default Engine;

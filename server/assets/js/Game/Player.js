@@ -35,7 +35,7 @@ export default function Player(playerdata) {
 		sight: new Map()
 	}
 	this.update = function(netdata) {
-		console.log(netdata)
+		// console.log(netdata)
 		if (netdata.health === 0) return ;
 		this.name = netdata.name;
 		this.direction = netdata.direction;
@@ -177,10 +177,10 @@ export default function Player(playerdata) {
 		// if (!this.self) {
 			if (this.health < 20) {
 				color = "red"
-				// Engine.CTX[2].canvas.style.boxShadow = `inset 0 0 100px ${red}`;
-				// if (!Engine.CTX[2].canvas.classList.contains('flash-health')) {
-				// 	Engine.CTX[2].canvas.classList.add('flash-health')
-				// }
+				Engine.CTX[2].canvas.style.boxShadow = `inset 0 0 100px ${red}`;
+				if (!Engine.CTX[2].canvas.classList.contains('flash-health')) {
+					Engine.CTX[2].canvas.classList.add('flash-health')
+				}
 			} else if (this.health < 50) {
 				color = "yellow"
 			} else {
@@ -192,13 +192,15 @@ export default function Player(playerdata) {
 			Engine.CTX[2].fillStyle = color;
 			Engine.CTX[2].fillRect(posX + 10, posY - 10, this.width * this.health / this.maxHealth, 5);
 			Engine.CTX[2].fillStyle = '#fff';
-			Engine.CTX[2].fillText(this.health + '/' + this.maxHealth, posX + 32, posY - 15);
+			Engine.CTX[2].fillText(this.health + '/' + this.maxHealth, posX + 32, posY - 14);
 			Engine.CTX[2].fillStyle = '#fff';
+			//change the font size of the name
+			Engine.CTX[2].font = '10px Arial';
 			Engine.CTX[2].fillText(this.name, posX + 32, posY - 25);
 			// Engine.CTX[2].fillStyle = '#fff';
 			// Engine.CTX[2].fillText(Math.round(this.posinmap.x) + ',' + Math.round(this.posinmap.y), posX + 32 , posY - 50);
-			Engine.CTX[2].fillStyle = '#fff';
-			Engine.CTX[2].fillText(Math.round(this.position.x) + ',' + Math.round(this.position.y), posX + 32, posY - 40);
+			// Engine.CTX[2].fillStyle = '#fff';
+			// Engine.CTX[2].fillText(Math.round(this.position.x) + ',' + Math.round(this.position.y), posX + 32, posY - 40);
 		// }
 
 		const hbplayer = {
@@ -208,17 +210,17 @@ export default function Player(playerdata) {
 			height: this.hitbox.height,
 		}
 
-		if (this.hitbox.type == 'circle') {
-			Engine.CTX[2].beginPath();
-			Engine.CTX[2].arc(posX + this.hitbox.x, posY + this.hitbox.y, this.hitbox.width, 0, 2 * Math.PI);
-			Engine.CTX[2].strokeStyle = '#fff';
-			Engine.CTX[2].stroke();
-		} else if (this.hitbox.type == 'square') {
-			Engine.CTX[2].beginPath();
-			Engine.CTX[2].strokeStyle = '#ff0000';
-			Engine.CTX[2].rect(posX + this.hitbox.x, posY + this.hitbox.y, hbplayer.radius, hbplayer.height);
-			// Engine.CTX[2].rect(hbobject.x, hbobject.y, hbobject.radius, hbobject.height);
-			Engine.CTX[2].stroke();
-		}
+		// if (this.hitbox.type == 'circle') {
+		// 	Engine.CTX[2].beginPath();
+		// 	Engine.CTX[2].arc(posX + this.hitbox.x, posY + this.hitbox.y, this.hitbox.width, 0, 2 * Math.PI);
+		// 	Engine.CTX[2].strokeStyle = '#fff';
+		// 	Engine.CTX[2].stroke();
+		// } else if (this.hitbox.type == 'square') {
+		// 	Engine.CTX[2].beginPath();
+		// 	Engine.CTX[2].strokeStyle = '#ff0000';
+		// 	Engine.CTX[2].rect(posX + this.hitbox.x, posY + this.hitbox.y, hbplayer.radius, hbplayer.height);
+		// 	// Engine.CTX[2].rect(hbobject.x, hbobject.y, hbobject.radius, hbobject.height);
+		// 	Engine.CTX[2].stroke();
+		// }
 	}
 }

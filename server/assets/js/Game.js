@@ -131,7 +131,7 @@ Game.loop = function() {
 Game.newOnlinePlayer = function(player) {
 	if (!Game.Players.has(player.id)) { //We make sure we don't duplicate the player
 		const now = performance.now();
-		console.log(`New player ${player.id}|${player.name} connected [${Math.round(now)}ms]`);
+		// console.log(`New player ${player.id}|${player.name} connected [${Math.round(now)}ms]`);
 		Game.Players.set(player.id, new Engine.Player({
 			id: `${Date.now()}::${player.sid}::${player.name}`,
 			uuid: player.id,

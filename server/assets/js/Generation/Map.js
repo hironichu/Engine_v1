@@ -13,7 +13,7 @@ const chunktest = {
 	layers: [
 		{
 			name:'background',
-			tiles: Array.from(Array(1024).keys()).map((x) => x % 2 ? 11 : 2),
+			tiles: Array.from(Array(1024).keys()).map((x) => 1),
 		},
 		{
 			name:'middle',
@@ -21,7 +21,16 @@ const chunktest = {
 		},
 		{
 			name : 'foreground',
-			tiles: [4,4,4,4,4,4,4,4],
+			tiles: [],
+		}
+	],
+	objects: [
+		{
+			name: 'box',
+			type: 'box',
+			slug: 'box',
+			x: 15,
+			y: 5,
 		}
 	]
 }
@@ -36,7 +45,7 @@ const chunktest2 = {
 	layers: [
 		{
 			name:'background',
-			tiles: Array.from(Array(1024).keys()).map((x) => x % 2 ? 5 : 4),
+			tiles: Array.from(Array(1024).keys()).map((x) => 1),
 		},
 		{
 			name:'middle',
@@ -44,7 +53,7 @@ const chunktest2 = {
 		},
 		{
 			name : 'foreground',
-			tiles: Array.from(Array(1024).keys()).map((x) => -1),
+			tiles: [],
 		}
 	],
 	objects: [
@@ -68,9 +77,7 @@ const chunktest3 = {
 	layers: [
 		{
 			name:'background',
-			tiles: Array.from(Array(1024).keys()).map((x) => {
-				return x % 2 ? 3 : 5
-			}),
+			tiles: Array.from(Array(1024).keys()).map((x) => 1),
 		},
 		{
 			name:'middle',
@@ -78,7 +85,7 @@ const chunktest3 = {
 		},
 		{
 			name : 'foreground',
-			tiles: Array.from(Array(1024).keys()).map((x) => -1),
+			tiles: [],
 		}
 	],
 	objects: [
@@ -101,7 +108,7 @@ const chunktest4 = {
 	layers: [
 		{
 			name:'background',
-			tiles: Array.from(Array(1024).keys()).map((x) => x % 2 ? 2 : 8),
+			tiles: Array.from(Array(1024).keys()).map((x) => 1),
 		},
 		{
 			name:'middle',
@@ -109,7 +116,7 @@ const chunktest4 = {
 		},
 		{
 			name : 'foreground',
-			tiles: Array.from(Array(1024).keys()).map((x) => -1),
+			tiles: [],
 		}
 	],
 	objects: []
@@ -129,11 +136,11 @@ const chunktest5 = {
 		},
 		{
 			name:'middle',
-			tiles: Array.from(Array(1024).keys()).map((x) => -1),
+			tiles: [],
 		},
 		{
 			name : 'foreground',
-			tiles: Array.from(Array(1024).keys()).map((x) => -1),
+			tiles: [],
 		}
 	]
 }
@@ -151,11 +158,11 @@ const chunktest6 = {
 		},
 		{
 			name:'middle',
-			tiles: Array.from(Array(1024).keys()).map((x) => -1),
+			tiles: [],
 		},
 		{
 			name : 'foreground',
-			tiles: Array.from(Array(1024).keys()).map((x) => -1),
+			tiles: [],
 		}
 	]
 }
